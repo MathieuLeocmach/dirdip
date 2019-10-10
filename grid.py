@@ -1,4 +1,47 @@
 import numpy as np
+from numba import jit
+
+#implementation using loops and numba
+@jit(nopython=True)
+def bin_weight_count(x, weights, minlength=0):
+    """Count number of occurrences of each value in array of non-negative ints. Also sums all weights for each value. If a value n is found at position i, count[n] += 1 and out[n] += weight[i].
+
+The number of bins (of size 1) is one larger than the largest value in x. If minlength is specified, there will be at least this number of bins in the output array (though it will be longer if necessary, depending on the contents of x). Each bin gives the number of occurrences of its index value in x.
+
+Parameters
+----------
+x : array_like, 1 dimension, nonnegative ints
+
+    Input array.
+    
+weights : array_like
+
+    Weights, array broadcastable with x (e.g. first dimension of weights is len(x)).
+    
+minlength : int
+
+    A minimum number of bins for the output array.
+
+Returns
+----------
+out : ndarray of the same type as weights
+    The sum of the weights in each bin. The shape of out is equal to `(max(minlength, np.amax(x)+1), wheights.shape[1:])`.
+    
+count : 1D ndarray of ints
+    The number of elements of x in each bin. The length of count is `max(minlength, np.amax(x)+1)`.
+
+
+"""
+    mx = x.max()
+    mn = x.min()
+    assert mn >= 0
+    ans_size = max(mx+1, minlength)
+    n = np.zeros((ans_size,), dtype=np.int64)
+    s = np.zeros((ans_size,) + weights.shape[1:], dtype=weights.dtype)
+    for i,w in zip(x, weights):
+        n[i] += 1
+        s[i] += w
+    return s,n
 
 class Grid:
     """A class to manage D-dimensional rectilinear grids"""
