@@ -21,8 +21,10 @@ class Grid:
         
         Parameters
         ----------
-        pos : A (D,P) array of coordinates
-            """
+        pos : A (P,D) array of coordinates
+        """
+        if pos.dim == 1:
+            return np.digitize(pos, self.bins[0])
         return np.column_stack([np.digitize(x, b) for x,b in zip(pos.T, self.bins)])
     
     def count(self, pos):
@@ -31,12 +33,12 @@ class Grid:
         return hist
     
     def sum_discreet(self, pos, field):
-        """sum per grid element the values of a field defined only at coordinates pos"""
+        """sum per grid element the values of a scalar field defined only at coordinates pos"""
         hist, bins = np.histogramdd(pos, self.bins, weights=field)
         return hist
     
     def mean_discreet(self, pos, field):
-        """average per grid element the values of a field defined only at coordinates pos"""
+        """average per grid element the values of a scalar field defined only at coordinates pos"""
         s = self.sum_discreet(pos, field)
         n = self.count(pos)
         return s/np.maximum(1, n)
