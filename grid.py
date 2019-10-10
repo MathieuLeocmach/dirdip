@@ -30,7 +30,6 @@ out : ndarray of the same type as weights
 count : 1D ndarray of ints
     The number of elements of x in each bin. The length of count is `max(minlength, np.amax(x)+1)`.
 
-
 """
     mx = x.max()
     mn = x.min()
@@ -41,6 +40,45 @@ count : 1D ndarray of ints
     for i,w in zip(x, weights):
         n[i] += 1
         s[i] += w
+    return s,n
+    
+def bin_weight_countdd(ipos, weights, shape):
+    """Count number of occurrences of each D-uple of coordinates in array of non-negative integer coordinates. Also sums all weights for each value. If coordinate number p has indices (i,j,k), count[i,j,k] += 1 and out[i,j,k] += weight[p].
+
+In any dimension d, no coordinate should be larger or equal than shape[d] or lower than 0. 
+
+Parameters
+----------
+ipos : array_like, shape (P, D), nonnegative ints
+
+    Input array.
+    
+weights : array_like, shape (P, F)
+
+    Weights, array broadcastable with ipos (e.g. first dimension of weights is len(ipos)).
+    
+shape : sequence of int of size D
+
+    The multidimentional shape of the output array.
+
+Returns
+----------
+out : ndarray of the same type as weights
+    The sum of the weights in each bin. The shape of out is equal to `(*shape, *wheights.shape[1:])`.
+    
+count : 1D ndarray of ints
+    The number of elements of ipos in each bin. The length of count is `shape`.
+
+"""
+    # Compute the sample indices in the flattened histogram matrix.
+    # This raises an error if the array is too large.
+    xy = np.ravel_multi_index(ipos, shape)
+    # Bin xy (with and without weights) and assign it to the
+    # flattened histmat.
+    s,c = np.bincount(xy, weights, minlength = np.prod(shape))
+    # Shape into a proper matrix
+    c = c.reshape(shape)
+    s = s.reshape(shape + c.shape[1:])
     return s,n
 
 class Grid:
