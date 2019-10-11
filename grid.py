@@ -2,6 +2,16 @@ import numpy as np
 from numba import jit
 
 @jit(nopython=True)
+def digitize_regular(xs, offset, step, nstep):
+    """snap coordinates to a regular grid, assigning to it the index of the edge immediately larger to it.
+            Coordinates that are below the offset will have index 0.
+            Coordinates that are above offset + step * nstep will have index nstep."""
+    ipos = np.ceil((xs-offset)/step).astype(np.int64)
+    ipos[ipos>nstep] = nstep
+    ipos[ipos<0] = 0
+    return ipos
+
+@jit(nopython=True)
 def bin_count(x, minlength=0):
     """Count number of occurrences of each value in array of non-negative ints.
 
@@ -144,12 +154,12 @@ class Grid:
             for x,e in zip(pos.T, self.edges)
             ])
     
-    def count_sum_discreet(self, pos, field):
-        """sum per grid element the values of a scalar field defined only at coordinates pos"""
+    def count_sum_discreet(self, pos, fields):
+        """sum per grid element the values of scalar fields defined only at coordinates pos"""
         ipos = self.digitize(pos)
         if pos.ndim == 1:
             ipos = ipos[:,None]
-        sumw, count = bin_weight_countdd(ipos, self.nbins, weights=field)
+        sumw, count = bin_weight_countdd(ipos, self.nbins, weights=fields)
         #trim sides where the coordinates outside of the grid were binned
         core = self.ndim*(slice(1, -1),)
         return sumw[core], count[core]
@@ -164,14 +174,60 @@ class Grid:
         core = self.ndim*(slice(1, -1),)
         return count[core]
     
-    def sum_discreet(self, pos, field):
+    def sum_discreet(self, pos, fields):
         """sum per grid element the values of a scalar field defined only at coordinates pos"""
-        sumw, count = self.count_sum_discreet(pos, field)
+        sumw, count = self.count_sum_discreet(pos, fields)
         return sumw
     
-    def mean_discreet(self, pos, field):
+    def mean_discreet(self, pos, fields):
         """average per grid element the values of a scalar field defined only at coordinates pos"""
-        sumw, count = self.count_sum_discreet(pos, field)
+        sumw, count = self.count_sum_discreet(pos, fields)
         while count.ndim < sumw.ndim:
             count = count[...,None]
         return sumw/np.maximum(1, count)
+        
+        
+class RegularGrid(Grid):
+    """A class to manage D-dimensional regularly spaced rectilinear grids"""
+    def __init__(self, offsets, steps, nsteps):
+        """Parameters
+        ----------
+        offsets : sequence of D coordinates 
+        
+        steps : sequence of D coordinates
+        
+        nsteps : sequence of D positive ints"""
+        assert len(offsets) == len(steps)
+        assert len(steps) == len(nsteps)
+        for d, n in enumerate(nsteps):
+            if int(n) != n or n <= 0:
+                raise ValueError('`nsteps` must be positive integers'.format(d))
+        self.offsets = np.array(offsets)
+        self.steps = np.array(steps)
+        self.nsteps = np.array(nsteps, np.int64)
+        
+    @property
+    def ndim(self):
+        """Dimensionality of the grid"""
+        return len(self.offsets)
+        
+    @property
+    def nbins(self):
+        """Shape of the array used for binning, margins included"""
+        return tuple(n+1 for n in self.nsteps)
+    
+    def digitize(self, pos):
+        """snap positions to grid, assigning to it the index of the edge immediately larger to it.
+            Coordinates that are below the offset will have index 0.
+            Coordinates that are above the highest edge will have index steps[d].
+        
+        Parameters
+        ----------
+        pos : A (P,D) array of coordinates
+        """
+        if pos.ndim == 1:
+            return digitize_regular(pos, self.offsets[0], self.steps[0], self.nsteps[0])
+        return np.column_stack([
+            digitize_regular(x, offset, step, nstep)
+            for x, offset, step, nstep in zip(pos.T, self.offsets, self.steps, self.nsteps)
+            ])
