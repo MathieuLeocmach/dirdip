@@ -55,7 +55,7 @@ def test_grid2D():
         [0, 0, 0, 1]]]))
         
 def test_regulargrid1D():
-    grid = RegularGrid([0], [2], [5])
+    grid = RegularGrid([0], [2], [4])
     assert_equal(grid.ndim, 1)
     xs = np.arange(-1,12)
     assert_array_equal(grid.count(xs), [2,2,2,2])
@@ -67,7 +67,7 @@ def test_regulargrid1D():
     assert_array_equal(grid.mean_discreet(xs, f2), np.ones((4,2)))
     
 def test_regulargrid2D():
-    grid = RegularGrid([0, -3], [2,3], [5,5])
+    grid = RegularGrid([0, -3], [2,3], [4,4])
     assert_equal(grid.ndim, 2)
     xs = np.column_stack((np.arange(-1,12), np.arange(-1,12)))
     assert_array_equal(grid.count(xs), [

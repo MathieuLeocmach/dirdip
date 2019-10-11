@@ -190,7 +190,10 @@ class Grid:
 class RegularGrid(Grid):
     """A class to manage D-dimensional regularly spaced rectilinear grids"""
     def __init__(self, offsets, steps, nsteps):
-        """Parameters
+        """In dimension d, the lowest edge of the grid is at `offset[d]` and the highest is at `offset[d]+nsteps[d]*steps[d]`.
+        
+        
+        Parameters
         ----------
         offsets : sequence of D coordinates 
         
@@ -204,7 +207,7 @@ class RegularGrid(Grid):
                 raise ValueError('`nsteps` must be positive integers'.format(d))
         self.offsets = np.array(offsets)
         self.steps = np.array(steps)
-        self.nsteps = np.array(nsteps, np.int64)
+        self.nsteps = np.array(nsteps, np.int64) + 1
         
     @property
     def ndim(self):
