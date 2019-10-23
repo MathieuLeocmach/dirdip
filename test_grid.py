@@ -7,6 +7,11 @@ def test_bin_weight_count():
     s,c = bin_weight_count(x, weights1D, 7)
     assert_array_equal(s, [10512., 20970., 10512.,     0.,     0., 21006., 0.])
     assert_array_equal(c, [1000, 2000, 1000,    0,    0, 2000, 0])
+    
+def test_digitize_regular():
+    xs = np.array([-1,0,1])
+    assert_array_equal(digitize_regular(xs, 0.1, 1, 3), [0,0,1])
+    assert_array_equal(digitize_regular(xs, -0.1, 1, 3), [0,1,2])
 
 def test_grid1D():
     grid = Grid([np.arange(0,10,2)])

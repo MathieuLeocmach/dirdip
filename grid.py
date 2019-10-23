@@ -138,6 +138,11 @@ class Grid:
         """Shape of the array used for binning, margins included"""
         return tuple(len(e)+1 for e in self.edges)
     
+    @property
+    def shape(self):
+        """Shape of the output arrays"""
+        return tuple(s-2 for s in self.nbins)
+    
     def digitize(self, pos):
         """snap positions to grid, assigning to it the index of the edge immediately larger to it.
             Coordinates that are below the lowest edge will have index 0.
@@ -234,3 +239,13 @@ class RegularGrid(Grid):
             digitize_regular(x, offset, step, nstep)
             for x, offset, step, nstep in zip(pos.T, self.offsets, self.steps, self.nsteps)
             ])
+
+def display2Dcount(grid, ax, count):
+    """Display in a matplotlib axis the result of grid.count for a 2D grid"""
+    ax.imshow(
+        np.rot90(count), 
+        extent=(
+            grid.offsets[0], grid.offsets[0]+grid.steps[0]*(grid.nsteps[0]-1), 
+            grid.offsets[1], grid.offsets[1]+grid.steps[1]*(grid.nsteps[1]-1)
+        )
+    )
