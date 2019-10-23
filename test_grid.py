@@ -25,6 +25,17 @@ def test_grid1D():
     f2 = np.ones((xs.shape[0], 2))
     assert_array_equal(grid.sum_discreet(xs, f2), np.full((4,2), 2))
     assert_array_equal(grid.mean_discreet(xs, f2), np.ones((4,2)))
+    #effect of second set of coordinates
+    ys = xs
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys = xs+0.1
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys = np.copy(xs)
+    ys[2] += 2
+    assert_array_equal(grid.count(xs, ys), [1,2,2,2])
+    assert_array_equal(grid.sum_discreet(xs, f, ys), [1,2,2,2])
     
 def test_grid2D():
     grid = Grid([np.arange(0,10,2), np.arange(-3,15,3)])
@@ -58,11 +69,31 @@ def test_grid2D():
         [0, 1, 1, 0, 0],
         [0, 0, 1, 0, 0],
         [0, 0, 0, 1, 0]]]))
+    #effect of second set of coordinates
+    ys = np.copy(xs)
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys = xs + 0.1
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys[2] += 3
+    assert_array_equal(grid.sum_discreet(xs, f, ys), [
+        [0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 2, 0, 0],
+        [0, 0, 0, 2, 0]])
+    assert_array_equal(grid.mean_discreet(xs, f, ys), [
+        [0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 1, 0]])
+    
+    
         
 def test_regulargrid1D():
     grid = RegularGrid([0], [2], [4])
     assert_equal(grid.ndim, 1)
-    xs = np.arange(-1,12)
+    xs = np.arange(-1,12)+0.1
     assert_array_equal(grid.count(xs), [2,2,2,2])
     f = np.ones(xs.shape[0])
     assert_array_equal(grid.sum_discreet(xs, f), [2,2,2,2])
@@ -70,11 +101,22 @@ def test_regulargrid1D():
     f2 = np.ones((xs.shape[0], 2))
     assert_array_equal(grid.sum_discreet(xs, f2), np.full((4,2), 2))
     assert_array_equal(grid.mean_discreet(xs, f2), np.ones((4,2)))
+    #effect of second set of coordinates
+    ys = xs
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys = xs+0.1
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys = np.copy(xs)
+    ys[2] += 2
+    assert_array_equal(grid.count(xs, ys), [1,2,2,2])
+    assert_array_equal(grid.sum_discreet(xs, f, ys), [1,2,2,2])
     
 def test_regulargrid2D():
     grid = RegularGrid([0, -3], [2,3], [4,5])
     assert_equal(grid.ndim, 2)
-    xs = np.column_stack((np.arange(-1,12), np.arange(-1,12)))
+    xs = np.column_stack((np.arange(-1,12), np.arange(-1,12)))+0.1
     assert_array_equal(grid.count(xs), [
         [0, 2, 0, 0, 0],
         [0, 1, 1, 0, 0],
@@ -102,3 +144,21 @@ def test_regulargrid2D():
         [0, 1, 1, 0, 0],
         [0, 0, 1, 0, 0],
         [0, 0, 0, 1, 0]]]))
+    #effect of second set of coordinates
+    ys = np.copy(xs)
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys = xs + 0.1
+    assert_array_equal(grid.count(xs), grid.count(xs, ys))
+    assert_array_equal(grid.sum_discreet(xs, f), grid.sum_discreet(xs, f, ys))
+    ys[2] += 3
+    assert_array_equal(grid.sum_discreet(xs, f, ys), [
+        [0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 2, 0, 0],
+        [0, 0, 0, 2, 0]])
+    assert_array_equal(grid.mean_discreet(xs, f, ys), [
+        [0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 1, 0]])
