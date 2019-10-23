@@ -240,12 +240,3 @@ class RegularGrid(Grid):
             for x, offset, step, nstep in zip(pos.T, self.offsets, self.steps, self.nsteps)
             ])
 
-def display2Dcount(grid, ax, count):
-    """Display in a matplotlib axis the result of grid.count for a 2D grid"""
-    ax.imshow(
-        np.rot90(count), 
-        extent=(
-            grid.offsets[0], grid.offsets[0]+grid.steps[0]*(grid.nsteps[0]-1), 
-            grid.offsets[1], grid.offsets[1]+grid.steps[1]*(grid.nsteps[1]-1)
-        )
-    )
