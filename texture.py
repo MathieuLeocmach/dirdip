@@ -61,13 +61,13 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
     #extensive version of the asymmetric tensor $C = \ell \otimes \Delta\ell$ see equation C.7
     C = bonds[:,None,:] * delta_bonds[:,:,None]
     #symmetric tensor B is twice the symmetric part
-    B = C + C.T
+    B = C + np.transpose(C, axes=(0,2,1))
     #since B is symmetric keep only the upper triangle
-    i,j = np.triu_indices(pos.shape[1])
+    i,j = np.triu_indices(pos0.shape[1])
     B = B[:,i,j]
     #bin on each end of each bond and on the middle point
     #only points that stay in the same bin will be counted
-    sumw = np.zeros(grid.shape+(m.shape[1],))
+    sumw = np.zeros(grid.shape+(B.shape[1],))
     count = np.zeros(grid.shape, np.int64)
     for p,q in [(a,c), (b,d), (0.5*(a + b), 0.5*(c + d))]:
         su, co = grid.count_sum_discreet(p, B, q)
