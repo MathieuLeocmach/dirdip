@@ -159,9 +159,8 @@ class Grid:
             for x,e in zip(pos.T, self.edges)
             ])
     
-    def count_sum_discreet(self, pos, fields, qos=None):
-        """sum per grid element the values of scalar fields defined only at coordinates pos. 
-        If a second set of coordinates qos is defined, bins only when both coordinates belong to the same grid element"""
+    def check_digitize(self, pos, qos=None):
+        """If a second set of coordinates qos is defined, set to 0 the digitized coordinates that are not equal in all dimensions between pos and qos"""
         ipos = self.digitize(pos)
         if pos.ndim == 1:
             ipos = ipos[:,None]
@@ -169,8 +168,14 @@ class Grid:
             iqos = self.digitize(qos)
             if qos.ndim == 1:
                 iqos = iqos[:,None]
-            #digitized coordinate must be equal in all dimentions
+            #digitized coordinate must be equal in all dimensions
             ipos[np.any(ipos != iqos, axis=1)] = 0
+        return ipos
+    
+    def count_sum_discreet(self, pos, fields, qos=None):
+        """sum per grid element the values of scalar fields defined only at coordinates pos. 
+        If a second set of coordinates qos is defined, bins only when both coordinates belong to the same grid element"""
+        ipos = self.check_digitize(pos, qos)
         sumw, count = bin_weight_countdd(ipos, self.nbins, weights=fields)
         #trim sides where the coordinates outside of the grid were binned
         core = self.ndim*(slice(1, -1),)
@@ -179,15 +184,7 @@ class Grid:
     def count(self, pos, qos=None):
         """count how many points per grid element. Coordinates strictly below the lowest edge or above or equal to the highest edge in any dimension are not counted.
         If a second set of coordinates qos is defined, bins only when both coordinates belong to the same grid element"""
-        ipos = self.digitize(pos)
-        if pos.ndim == 1:
-            ipos = ipos[:,None]
-        if qos is not None:
-            iqos = self.digitize(qos)
-            if qos.ndim == 1:
-                iqos = iqos[:,None]
-            #digitized coordinate must be equal in all dimentions
-            ipos[np.any(ipos != iqos, axis=1)] = 0
+        ipos = self.check_digitize(pos, qos)
         count = bin_weight_countdd(ipos, self.nbins)
         #trim sides where the coordinates outside of the grid were binned
         core = self.ndim*(slice(1, -1),)
