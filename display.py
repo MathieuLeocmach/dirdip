@@ -17,8 +17,8 @@ def display2Dcount(grid, ax, count):
         )
     )
     
-def display_texture(ax, grid, texture):
-    """Display on a matplotlib axis an ellipse representing the texture at each grid element"""
+def display_matrices(ax, grid, texture):
+    """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue."""
     x,y = np.transpose(grid.offsets + (0.5+np.transpose([np.arange(n) for n in grid.nsteps-1]))*grid.steps)
     #rotate 90° to be consistent with axis orientation
     X, Y = np.meshgrid(x, y[::-1])
@@ -38,11 +38,11 @@ def display_texture(ax, grid, texture):
     )
     ec.set_array(np.rot90(count).ravel())
     ax.add_collection(ec)
-    #major and minor axes
-    xyps = (evectors*evalues[...,None]).reshape(2*len(ww),2)*0.5
+    #major and minor axes (only for positive eigenvalues)
+    xyps = np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2)).reshape(2*len(ww),2)*0.5
     ma = LineCollection(
         [[-xyp, xyp] for xyp in xyps],
         offsets=np.repeat(XY, 2, axis=0),
-        color='y'
+        color=(0.5,0.5,0.5)
     )
     ax.add_collection(ma)
