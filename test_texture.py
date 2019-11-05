@@ -67,4 +67,20 @@ def test_2D_4branches():
         [[2,0,4], [2,0,2], [2,0,4]],
         [[1,1,1], [4,0,2],[1,-1,1]]
     ])
-    
+    #move 1 point within the same grid element
+    pos1 = np.copy(pos0)
+    pos1[-1] += [0.1,0]
+    sumw1, count1 = bin_texture(pos1, edges, grid)
+    assert_array_equal(count0, count1)
+    assert_array_almost_equal(sumw1, [
+        [[1,-1,1], [4,0,2], [1,1,1]],
+        [[2.21,0.1,4], [2.21,0,2], [2.21,-0.1,4]],
+        [[1.21,1.1,1], [4.84,0,2],[1.21,-1.1,1]]
+    ])
+    sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
+    assert_array_equal(count0, count)
+    assert_array_almost_equal(sumw, [
+        [[0,0,0], [0,0,0], [0,0,0]],
+        [[0.21,0.1,0], [0.21,0,0], [0.21,-0.1,0]],
+        [[0.21,0.1,0], [0.84,0,0],[0.21,-0.1,0]]
+    ])
