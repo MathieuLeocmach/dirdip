@@ -100,3 +100,66 @@ def test_2D_4branches():
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count, [[0, 0, 0], [0, 4, 0], [0, 0, 0]])
     assert_array_almost_equal(sumw, np.zeros((3,3,3)))
+    
+def test_2D_3branches():
+    grid = RegularGrid([-1.2,-1.2], [0.8,0.8], [3,3])
+    pos0 = np.array([[0,0], [-1,0], [0,-1], [0,1]], dtype=float)
+    tree = KDTree(pos0)
+    edges = np.array([
+        [i,j] 
+        for i, js in enumerate(tree.query_ball_tree(tree, 1.5))
+        for j in sorted(js)
+        if i<j
+        ])
+    sumw0, count0 = bin_texture(pos0, edges, grid)
+    assert_array_equal(count0, [[1, 4, 1], [3, 3, 3], [0, 0, 0]])
+    assert_array_almost_equal(sumw0, [
+        [[1,-1,1], [4,0,2], [1,1,1]],
+        [[1,-1,3], [1,0,2], [1,1,3]],
+        [[0,0,0], [0,0,0],[0,0,0]]
+    ])
+    #move 1 point within the same grid element
+    pos1 = np.copy(pos0)
+    pos1[-1] += [0,0.1]
+    sumw1, count1 = bin_texture(pos1, edges, grid)
+    assert_array_equal(count0, count1)
+    assert_array_almost_equal(sumw1, [
+        [[1,-1,1], [4,0.1,2.21], [1,1.1,1.21]],
+        [[1,-1,3], [1,0,2.21], [1,1.1,3.63]],
+        [[0,0,0], [0,0,0],[0,0,0]]
+    ])
+    sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
+    assert_array_equal(count0, count)
+    assert_array_almost_equal(sumw, sumw1-sumw0)
+    #flip the motif along x
+    pos1 = np.array([[0,0], [1,0], [0,-1], [0,1]], dtype=float)
+    sumw1, count1 = bin_texture(pos1, edges, grid)
+    assert_array_equal(count0, [[1, 4, 1], [3, 3, 3], [0, 0, 0]])
+    assert_array_almost_equal(sumw1, [
+        [[0,0,0], [0,0,0],[0,0,0]],
+        [[1,1,3], [1,0,2], [1,-1,3]],
+        [[1,1,1], [4,0,2], [1,-1,1]]
+    ])
+    sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
+    assert_array_equal(count, [[0, 0, 0], [3, 3, 3], [0, 0, 0]])
+    assert_array_almost_equal(sumw, [
+        [[0,0,0], [0,0,0],[0,0,0]],
+        [[0,2,0], [0,0,0], [0,-2,0]],
+        [[0,0,0], [0,0,0],[0,0,0]]
+    ])
+    #rotate the motif by 90°
+    pos1 = np.array([[0,0], [0,-1], [1,0], [-1,0]], dtype=float)
+    sumw1, count1 = bin_texture(pos1, edges, grid)
+    assert_array_equal(count1, count0.T)
+    assert_array_almost_equal(sumw1, [
+        [[1,-1,1], [3,-1,1],[0,0,0]],
+        [[2,0,4], [2,0,1], [0,0,0]],
+        [[1,1,1], [3,1,1], [0,0,0]]
+    ])
+    sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
+    assert_array_equal(count, [[0, 0, 0], [0, 3, 0], [0, 0, 0]])
+    assert_array_almost_equal(sumw, [
+        [[0,0,0], [0,0,0],[0,0,0]],
+        [[0,0,0], [1,0,-1], [0,0,0]],
+        [[0,0,0], [0,0,0],[0,0,0]]
+    ])
