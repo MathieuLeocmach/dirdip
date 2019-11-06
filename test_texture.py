@@ -84,3 +84,19 @@ def test_2D_4branches():
         [[0.21,0.1,0], [0.21,0,0], [0.21,-0.1,0]],
         [[0.21,0.1,0], [0.84,0,0],[0.21,-0.1,0]]
     ])
+    #flip the motif along x
+    pos1 = np.array([[0,0], [1,0], [0,-1], [0,1], [-1,0]], dtype=float)
+    sumw1, count1 = bin_texture(pos1, edges, grid)
+    assert_array_equal(count0, count1)
+    assert_array_almost_equal(sumw0, sumw1)
+    sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
+    assert_array_equal(count, [[0, 0, 0], [4, 4, 4], [0, 0, 0]])
+    assert_array_almost_equal(sumw, np.zeros((3,3,3)))
+    #rotate the motif by 90°
+    pos1 = np.array([[0,0], [0,-1], [1,0], [-1,0], [0,1]], dtype=float)
+    sumw1, count1 = bin_texture(pos1, edges, grid)
+    assert_array_equal(count0, count1)
+    assert_array_almost_equal(sumw0, sumw1)
+    sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
+    assert_array_equal(count, [[0, 0, 0], [0, 4, 0], [0, 0, 0]])
+    assert_array_almost_equal(sumw, np.zeros((3,3,3)))
