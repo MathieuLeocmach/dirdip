@@ -102,6 +102,14 @@ count : 1D ndarray of ints
     The number of elements of ipos in each bin. The length of count is `shape`.
 
 """
+    assert ipos.shape[1] == len(shape)
+    # Case of no coordinates inputed
+    if len(ipos) == 0:
+        count = np.zeros(shape, dtype=np.int64)
+        if weights is None:
+            return count
+        sumw = np.zeros(shape + weights.shape[1:], dtype=weights.dtype)
+        return sumw, count
     # Compute the sample indices in the flattened histogram matrix.
     # This raises an error if the array is too large.
     xy = np.ravel_multi_index(ipos.T, shape)

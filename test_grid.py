@@ -16,8 +16,12 @@ def test_digitize_regular():
 def test_grid1D():
     grid = Grid([np.arange(0,10,2)])
     assert_equal(grid.ndim, 1)
-    xs = np.arange(-1,12)
     assert_array_equal(grid.edges[0], np.arange(0,10,2))
+    #inputs a list of zero coordinates
+    xs = np.zeros((0,1))
+    assert_array_equal(grid.count(xs), [0,0,0,0])
+    #inputs a list of coordinates
+    xs = np.arange(-1,12)
     assert_array_equal(grid.count(xs), [2,2,2,2])
     f = np.ones(xs.shape[0])
     assert_array_equal(grid.sum_discreet(xs, f), [2,2,2,2])
@@ -40,8 +44,12 @@ def test_grid1D():
 def test_grid2D():
     grid = Grid([np.arange(0,10,2), np.arange(-3,15,3)])
     assert_equal(grid.ndim, 2)
-    xs = np.column_stack((np.arange(-1,12), np.arange(-1,12)))
     assert_array_equal(grid.edges[0], np.arange(0,10,2))
+    #inputs a list of zero coordinates
+    xs = np.zeros((0,2))
+    assert_array_equal(grid.count(xs), np.zeros((4,5), int))
+    #inputs a list of coordinates
+    xs = np.column_stack((np.arange(-1,12), np.arange(-1,12)))
     assert_array_equal(grid.count(xs), [
         [0, 2, 0, 0, 0],
         [0, 1, 1, 0, 0],
