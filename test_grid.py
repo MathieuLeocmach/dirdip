@@ -101,6 +101,10 @@ def test_grid2D():
 def test_regulargrid1D():
     grid = RegularGrid([0], [2], [4])
     assert_equal(grid.ndim, 1)
+    #inputs a list of zero coordinates
+    xs = np.zeros((0,1))
+    assert_array_equal(grid.count(xs), [0,0,0,0])
+    #inputs a list of coordinates
     xs = np.arange(-1,12)+0.1
     assert_array_equal(grid.count(xs), [2,2,2,2])
     f = np.ones(xs.shape[0])
@@ -124,6 +128,10 @@ def test_regulargrid1D():
 def test_regulargrid2D():
     grid = RegularGrid([0, -3], [2,3], [4,5])
     assert_equal(grid.ndim, 2)
+    #inputs a list of zero coordinates
+    xs = np.zeros((0,2))
+    assert_array_equal(grid.count(xs), np.zeros((4,5), int))
+    #inputs a list of coordinates
     xs = np.column_stack((np.arange(-1,12), np.arange(-1,12)))+0.1
     assert_array_equal(grid.count(xs), [
         [0, 2, 0, 0, 0],
