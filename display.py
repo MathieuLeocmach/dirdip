@@ -7,7 +7,7 @@ def display_pos_edges(ax, pos, pairs):
     ax.add_collection(lc)
     ax.plot(*pos.T,'ok')
     
-def display2Dcount(grid, ax, count):
+def display2Dcount(ax, grid, count):
     """Display in a matplotlib axis the result of grid.count for a 2D grid"""
     ax.imshow(
         np.rot90(count), 
@@ -18,7 +18,7 @@ def display2Dcount(grid, ax, count):
     )
     
 def display_matrices(ax, grid, texture):
-    """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue."""
+    """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue. A circle is when the two eigenvalues are equal in absolute value."""
     x,y = np.transpose(grid.offsets + (0.5+np.transpose([np.arange(n) for n in grid.nsteps-1]))*grid.steps)
     #rotate 90° to be consistent with axis orientation
     X, Y = np.meshgrid(x, y[::-1])
