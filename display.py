@@ -30,14 +30,18 @@ def display_matrices(ax, grid, texture):
     hh = evalues[...,0].ravel()
     #angle is given by the angle of the larger eigenvector
     aa = np.rad2deg(np.arctan2(evectors[...,1,1], evectors[...,0,1])).ravel()
+    #sum of the eigenvalues (trace of the matrix)
+    trace = ww+hh#np.where(np.abs(ww)>np.abs(hh), ww, hh)#ww*hh
+    #color
+    col = plt.cm.viridis((trace - trace.min())/trace.ptp())
     
     #show ellipses
     ec = EllipseCollection(
         ww, hh, aa, units='x', offsets=XY,
-        transOffset=ax.transData
+        transOffset=ax.transData, 
+        edgecolors=col, facecolors='none',
     )
-    #show edges so that a texture with a zero eignevalue still shows
-    ec.set_edgecolor('face')
+    ec.set_array(trace)
     ax.add_collection(ec)
     #major and minor axes (only for positive eigenvalues)
     xyps = np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2)).reshape(2*len(ww),2)*0.5
@@ -47,3 +51,4 @@ def display_matrices(ax, grid, texture):
         color=(0.5,0.5,0.5)
     )
     ax.add_collection(ma)
+    return ec
