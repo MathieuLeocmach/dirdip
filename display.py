@@ -9,7 +9,7 @@ def display_pos_edges(ax, pos, pairs):
     
 def display2Dcount(ax, grid, count):
     """Display in a matplotlib axis the result of grid.count for a 2D grid"""
-    ax.imshow(
+    return ax.imshow(
         np.rot90(count), 
         extent=(
             grid.offsets[0], grid.offsets[0]+grid.steps[0]*(grid.nsteps[0]-1), 
@@ -36,7 +36,8 @@ def display_matrices(ax, grid, texture):
         ww, hh, aa, units='x', offsets=XY,
         transOffset=ax.transData
     )
-    ec.set_array(np.rot90(count).ravel())
+    #show edges so that a texture with a zero eignevalue still shows
+    ec.set_edgecolor('face')
     ax.add_collection(ec)
     #major and minor axes (only for positive eigenvalues)
     xyps = np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2)).reshape(2*len(ww),2)*0.5
