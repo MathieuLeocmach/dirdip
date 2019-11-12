@@ -18,7 +18,7 @@ def display2Dcount(ax, grid, count):
         )
     )
     
-def display_matrices(ax, grid, texture):
+def display_matrices(ax, grid, texture, scale = None):
     """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue. A circle is when the two eigenvalues are equal in absolute value."""
     x,y = np.transpose(grid.offsets + (0.5+np.transpose([np.arange(n) for n in grid.nsteps-1]))*grid.steps)
     #rotate 90° to be consistent with axis orientation
@@ -35,17 +35,18 @@ def display_matrices(ax, grid, texture):
     trace = ww+hh#np.where(np.abs(ww)>np.abs(hh), ww, hh)#ww*hh
     #color
     col = plt.cm.viridis((trace - trace.min())/trace.ptp())
+    if scale is None: scale = 1
     
     #show ellipses
     ec = EllipseCollection(
-        ww, hh, aa, units='x', offsets=XY,
+        ww*scale, hh*scale, aa, units='x', offsets=XY,
         transOffset=ax.transData, 
         edgecolors=col, facecolors='none',
     )
     ec.set_array(trace)
     ax.add_collection(ec)
     #major and minor axes (only for positive eigenvalues)
-    xyps = np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2)).reshape(2*len(ww),2)*0.5
+    xyps = scale * np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2)).reshape(2*len(ww),2)*0.5
     ma = LineCollection(
         [[-xyp, xyp] for xyp in xyps],
         offsets=np.repeat(XY, 2, axis=0),
