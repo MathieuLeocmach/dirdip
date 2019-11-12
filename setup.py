@@ -3,7 +3,7 @@ import setuptools
 from codecs import open
 from os import path
 
-import texture
+
 
 here = path.abspath(path.dirname(__file__))
 
@@ -17,7 +17,7 @@ setuptools.setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=texture.__version__,
+    version='0.0.1',
     # Choose your license
     license='GPL',
     author="Mathieu Leocmach",
@@ -33,5 +33,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['numpy', 'scipy >= 0.18', 'numba', 'matplotlib', 'nosetest'],
+    install_requires=['numpy', 'scipy >= 0.18', 'numba', 'matplotlib', 'nose'],
 )

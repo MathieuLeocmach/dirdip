@@ -1,4 +1,4 @@
-from grid import *
+from texture.grid import *
 from numpy.testing import *
 
 def test_bin_weight_count():

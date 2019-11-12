@@ -1,7 +1,7 @@
-from texture import *
+from texture.texture import *
 from numpy.testing import *
 from scipy.spatial import cKDTree as KDTree
-from grid import RegularGrid
+from texture.grid import RegularGrid
 
 def test_appeared_disappeared():
     pairs0 = np.array([[0,1], [2,10], [10,3]])
