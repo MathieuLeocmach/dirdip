@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 from matplotlib.collections import EllipseCollection, LineCollection
 
 def display_pos_edges(ax, pos, pairs):
