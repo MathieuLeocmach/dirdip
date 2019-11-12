@@ -8,7 +8,7 @@ Implementation of Graner et al., Eur. Phys. J. E 25, 349-369 (2008) DOI 10.1140/
 
 Dependencies are numpy, scipy, numba, matplotlib and nosetest.
 
-    python setup.py
+    pip install -e .
    
 ## Tests
 
