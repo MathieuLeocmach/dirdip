@@ -2,11 +2,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.collections import EllipseCollection, LineCollection
 
-def display_pos_edges(ax, pos, pairs):
+def display_pos_edges(ax, pos, pairs, kw_pos = {'marker': 'o', 'c': 'k'}, kw_edges = {'color': 'r'}):
     """Display on a matplotlib axis positions and bonds between them"""
-    lc = LineCollection(pos[pairs], color='r')
+    lc = LineCollection(pos[pairs], **kw_edges)
     ax.add_collection(lc)
-    ax.plot(*pos.T,'ok')
+    ax.scatter(*pos.T, **kw_pos)
     
 def display2Dcount(ax, grid, count):
     """Display in a matplotlib axis the result of grid.count for a 2D grid"""
