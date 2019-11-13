@@ -35,7 +35,13 @@ def display_matrices(ax, grid, texture, scale = None):
     trace = ww+hh#np.where(np.abs(ww)>np.abs(hh), ww, hh)#ww*hh
     #color
     col = plt.cm.viridis((trace - trace.min())/trace.ptp())
-    if scale is None: scale = 1
+    
+    if scale is None: 
+        #scale = 1
+        ellipse_areas = np.pi * np.abs(np.prod(evalues, axis=-1))
+        rarea = ellipse_areas / grid.areas()
+        scale = 1/np.nanmean(np.sqrt(rarea))
+        
     
     #show ellipses
     ec = EllipseCollection(
