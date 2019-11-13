@@ -16,6 +16,7 @@ from scipy.spatial import Voronoi
 import matplotlib.pylab as plt
 
 def voro_edges(pos):
+    """Voronoi neighbors."""
     vor = Voronoi(pos) # create Voronoi diagram
     points_adj = vor.ridge_points
     edges = np.sort(points_adj, axis=-1)
@@ -25,7 +26,7 @@ def voro_edges(pos):
 path = "/data4To/Ong/Tracking result/19_04_17 Dropping Glass Beads"
 path_traj = os.path.join(path,'tracking/around GB_refined/Traj_f_Act{}.h5')
 
-pos_columns = ['x','y']
+
 
 act = 1
 f0 = np.arange(177,187)
@@ -43,21 +44,25 @@ Nc_tot = np.zeros_like(Ntot)
 
 for f in f0:
     
-     # get two frames
+    # get two frames
     with tp.PandasHDFStore(path_traj.format(act)) as s:
         frame0 = s.get(f)
         frame1 = s.get(f + lg)
     
+    # work only on particles that exist in both frames
+    ## gather in one DataFrame the two times so that in a single row we have the information about the particle at the two time steps
     joined = frame0.join(frame1.set_index('particle'), on ="particle", how='inner', lsuffix='0', rsuffix='1')
     
+    # extract only the coordinates at each time step. Thanks to the previous step, we have ensured that the rows are sorted consistently
     pos0 = joined[['x0', 'y0']].to_numpy()
     pos1 = joined[['x1', 'y1']].to_numpy()
-        
-    #par_intersect = np.intersect1d(frameA.particle,frameB.particle) # particle that exist in both frames
     
-     # Voronoi neighbors
+    # Voronoi neighbors
+    ## You may want to refine this with a distance criterion or use another definition of the bonds
     edges0 = voro_edges(pos0)
     edges1 = voro_edges(pos1)
+    
+    # if the grid is mobile between the two time steps (translation, shear, etc.), that is where you should transform the coordinates
     
     #bin static texture
     for pos, edges in [(pos0, edges0), (pos1, edges1)]:
@@ -75,22 +80,31 @@ for f in f0:
     
 #from sums to averages
 Ntot_nz = 1/np.minimum(1, Ntot)
-    
+
+## matrices
+### texture, in length**2
 M = Mtot * Ntot_nz[...,None]
+### geometrical changes, in length**2/time (probably px**2*fps)
 B = 2 * Btot * Ntot_nz[...,None]
+### topological changes, in length**2/time (probably px**2*fps)
 T = 2 * Ttot * Ntot_nz[...,None]
 
+## densities
+### apprearing bonds, in 1/time (probably fps)
 na = 2 * Na_tot * Ntot_nz
+### disapprearing bonds, in 1/time (probably fps)
 nd = 2 * Nd_tot * Ntot_nz
+### conserved bonds, in 1/time (probably fps)
 nc = 2 * Nc_tot * Ntot_nz
 
-#display things!
+# display things!
 fig, axs = plt.subplots(2,3, sharex=True, sharey=True, subplot_kw={'aspect':'equal'})
 display_matrices(axs[0,0], grid, M, 1e-2)
 display_matrices(axs[0,1], grid, B, 1e-2)
 display_matrices(axs[0,2], grid, T, 1e-2)
-display2Dcount(axs[1,0], grid, nd)
+ima = display2Dcount(axs[1,0], grid, nd)
 display2Dcount(axs[1,1], grid, na)
-display2Dcount(axs[1,2], grid, nc)
+fig.colorbar(display2Dcount(axs[1,2], grid, nc), ax=axs[1, 2])
+fig.colorbar(ima, ax=axs[1, :2], shrink=0.6)
 
 plt.show()
