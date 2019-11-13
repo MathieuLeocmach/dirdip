@@ -99,9 +99,9 @@ nc = 2 * Nc_tot * Ntot_nz
 
 # display things!
 fig, axs = plt.subplots(2,3, sharex=True, sharey=True, subplot_kw={'aspect':'equal'})
-display_matrices(axs[0,0], grid, M, 1e-2)
-display_matrices(axs[0,1], grid, B, 1e-2)
-display_matrices(axs[0,2], grid, T, 1e-2)
+display_matrices(axs[0,0], grid, M)
+display_matrices(axs[0,1], grid, B)
+display_matrices(axs[0,2], grid, T)
 ima = display2Dcount(axs[1,0], grid, nd)
 display2Dcount(axs[1,1], grid, na)
 fig.colorbar(display2Dcount(axs[1,2], grid, nc), ax=axs[1, 2])
