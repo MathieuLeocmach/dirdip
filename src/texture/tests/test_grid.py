@@ -17,6 +17,7 @@ def test_grid1D():
     grid = Grid([np.arange(0,10,2)])
     assert_equal(grid.ndim, 1)
     assert_array_equal(grid.edges[0], np.arange(0,10,2))
+    assert_array_equal(grid.areas(), [2,2,2,2])
     #inputs a list of zero coordinates
     xs = np.zeros((0,1))
     assert_array_equal(grid.count(xs), [0,0,0,0])
@@ -45,6 +46,7 @@ def test_grid2D():
     grid = Grid([np.arange(0,10,2), np.arange(-3,15,3)])
     assert_equal(grid.ndim, 2)
     assert_array_equal(grid.edges[0], np.arange(0,10,2))
+    assert_array_equal(grid.areas(), np.full((4,5), 6))
     #inputs a list of zero coordinates
     xs = np.zeros((0,2))
     assert_array_equal(grid.count(xs), np.zeros((4,5), int))
@@ -104,6 +106,7 @@ def test_regulargrid1D():
     #inputs a list of zero coordinates
     xs = np.zeros((0,1))
     assert_array_equal(grid.count(xs), [0,0,0,0])
+    assert_array_equal(grid.areas(), np.full((4), 2))
     #inputs a list of coordinates
     xs = np.arange(-1,12)+0.1
     assert_array_equal(grid.count(xs), [2,2,2,2])
@@ -128,6 +131,7 @@ def test_regulargrid1D():
 def test_regulargrid2D():
     grid = RegularGrid([0, -3], [2,3], [4,5])
     assert_equal(grid.ndim, 2)
+    assert_array_equal(grid.areas(), np.full((4,5), 6))
     #inputs a list of zero coordinates
     xs = np.zeros((0,2))
     assert_array_equal(grid.count(xs), np.zeros((4,5), int))

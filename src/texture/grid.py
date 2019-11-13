@@ -151,6 +151,13 @@ class Grid:
         """Shape of the output arrays"""
         return tuple(s-2 for s in self.nbins)
     
+    def areas(self):
+        """areas of the grid cells"""
+        p = 1.
+        for e in self.edges:
+            p = np.multiply.outer(p, np.diff(e))
+        return p.reshape(self.shape)
+    
     def digitize(self, pos):
         """snap positions to grid, assigning to it the index of the edge immediately larger to it.
             Coordinates that are below the lowest edge will have index 0.
@@ -244,6 +251,10 @@ class RegularGrid(Grid):
     def nbins(self):
         """Shape of the array used for binning, margins included"""
         return tuple(n+1 for n in self.nsteps)
+    
+    def areas(self):
+        """areas of the grid cells"""
+        return np.full(self.shape, np.prod(self.steps))
     
     def digitize(self, pos):
         """snap positions to grid, assigning to it the index of the edge immediately larger to it.
