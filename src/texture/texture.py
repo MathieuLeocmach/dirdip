@@ -43,8 +43,8 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
     
     Returns
     ----------
-    sumw: the sum of the B matrices on each grid element.
-    count: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. The middle of a bond also counts for 1 if it emains on the same grid element between t0 and t1. Caution: intensive matrix B is obtained by dividing sumw of the present function by the count of bin_texture (averaged between t0 and t1).
+    sumC: the sum of the C matrices on each grid element. From C, one obtains `B = C + np.transpose(C, axes=(0,2,1))`. Provided the texture M, we can also obtain V and $\Omega$.
+    count: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. The middle of a bond also counts for 1 if it emains on the same grid element between t0 and t1. Caution: intensive matrix C is obtained by dividing sumC of the present function by the count of bin_texture (averaged between t0 and t1).
     """
     assert pos0.shape[1] == grid.ndim
     assert pos0.shape[0] == pos1.shape[0]
@@ -60,20 +60,24 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
     delta_bonds = bonds1 - bonds0
     #extensive version of the asymmetric tensor $C = \ell \otimes \Delta\ell$ see equation C.7
     C = bonds[:,None,:] * delta_bonds[:,:,None]
-    #symmetric tensor B is twice the symmetric part
-    B = C + np.transpose(C, axes=(0,2,1))
-    #since B is symmetric keep only the upper triangle
-    i,j = np.triu_indices(pos0.shape[1])
-    B = B[:,i,j]
+    #since C is not symmetric we have to keep all coefficients
     #bin on each end of each bond and on the middle point
     #only points that stay in the same bin will be counted
-    sumw = np.zeros(grid.shape+(B.shape[1],))
+    sumw = np.zeros(grid.shape + C.shape[1:])
     count = np.zeros(grid.shape, np.int64)
     for p,q in [(a,c), (b,d), (0.5*(a + b), 0.5*(c + d))]:
-        su, co = grid.count_sum_discreet(p, B, q)
+        su, co = grid.count_sum_discreet(p, C, q)
         sumw += su
         count += co
     return sumw, count
+
+def C2B(C):
+    """convert from a C (or sumC) matrix to a B (resp sumB) matrix (upper triangle)"""
+    axes = np.arange(C.ndim)
+    axes[-2:] = axes[-2:][::-1]
+    B = (C + np.transpose(C, axes=axes))
+    i,j = np.triu_indices(C.shape[-1])
+    return B[...,i,j]
 
 def bonds_set_to_array(s):
     if len(s)==0:
@@ -118,7 +122,7 @@ def bin_topological_changes(pos0, pos1, pairs0, pairs1, grid):
     
 def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     """bin on a grid geometrical and topological changes of the texture tensor between two times.
-    Caution: intensive matrices B and T are obtained by dividing sumB and sumT of the present function by the count of bin_texture (averaged between t0 and t1).
+    Caution: intensive matrices C and T are obtained by dividing sumC and sumT of the present function by the count of bin_texture (averaged between t0 and t1).
     
     Parameters
     ----------
@@ -129,7 +133,7 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     
     Returns
     ----------
-    sumB: the sum of the B matrices on each grid element.
+    sumC: the sum of the C matrices on each grid element.
     countc: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. The middle of a bond also counts for 1 if it emains on the same grid element between t0 and t1.
     sumT: the sum of the T matrices on each grid element.
     counta: the number of appearing matrices binned in each grid element. Each end of an appearing bond at t1 counts for 1. The middle of a bond also counts for 1.
@@ -145,5 +149,5 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     #bin the texture of bonds that disappeared
     sumwd, countd = bin_texture(pos0, pairsd, grid)
     #bin the geometrical changes of the conserved bonds
-    sumwc, countc = bin_geometrical_changes(pos0, pos1, pairsc, grid)
-    return sumwc, countc, sumwa-sumwd, counta, countd
+    sumC, countc = bin_geometrical_changes(pos0, pos1, pairsc, grid)
+    return sumC, countc, sumwa-sumwd, counta, countd

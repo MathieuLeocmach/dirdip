@@ -48,14 +48,15 @@ def test_1D_notregular():
     assert_array_almost_equal(sumw1, np.array([3*0.16+3*0.04, 3*0.16+1*0.09+1*0.16, 2*0.09+2*0.16+3*0.01])[:,None])
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count0, count)
-    assert_array_almost_equal(sumw, np.array([2*3*0.3*(0.2-0.4), 0, 0])[:,None])
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, np.array([2*3*0.3*(0.2-0.4), 0, 0])[:,None])
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     
     #move one point to a different grid element, without straining any existing bond
     pos1 = np.copy(pos0)
@@ -65,14 +66,15 @@ def test_1D_notregular():
     assert_array_almost_equal(sumw1, np.array([5*0.16, 4*0.16+1*0.09+1*0.16, 2*0.09+2*0.16+3*0.01])[:,None])
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count, [5,5,7])
-    assert_array_almost_equal(sumw, np.array([0, 0, 0])[:,None])
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, np.array([0, 0, 0])[:,None])
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     ##update topology
     tree1 = KDTree(pos1)
     edges1 = np.array([
@@ -82,9 +84,9 @@ def test_1D_notregular():
         if i<j
         ])
     assert_array_equal(edges1, np.array([[0,1], [1,2], [2,3], [3,4], [4,5], [4,6], [5,6]]))
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges1, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges1, grid)
     assert_array_equal(countc, np.array([5,5,7]))
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.array([0,3,0]))
     assert_array_equal(countd, np.zeros_like(count))
     assert_array_almost_equal(sumT, np.array([0,3*0.16,0])[:,None])
@@ -118,18 +120,19 @@ def test_2D_4branches():
     ])
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count0, count)
-    assert_array_almost_equal(sumw, [
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, [
         [[0,0,0], [0,0,0], [0,0,0]],
         [[0.21,0.1,0], [0.21,0,0], [0.21,-0.1,0]],
         [[0.21,0.1,0], [0.84,0,0],[0.21,-0.1,0]]
     ])
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     #flip the motif along x
     pos1 = np.array([[0,0], [1,0], [0,-1], [0,1], [-1,0]], dtype=float)
     sumw1, count1 = bin_texture(pos1, edges, grid)
@@ -137,14 +140,15 @@ def test_2D_4branches():
     assert_array_almost_equal(sumw0, sumw1)
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count, [[0, 0, 0], [4, 4, 4], [0, 0, 0]])
-    assert_array_almost_equal(sumw, np.zeros((3,3,3)))
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, np.zeros((3,3,3)))
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     #rotate the motif by 90°
     pos1 = np.array([[0,0], [0,-1], [1,0], [-1,0], [0,1]], dtype=float)
     sumw1, count1 = bin_texture(pos1, edges, grid)
@@ -152,14 +156,15 @@ def test_2D_4branches():
     assert_array_almost_equal(sumw0, sumw1)
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count, [[0, 0, 0], [0, 4, 0], [0, 0, 0]])
-    assert_array_almost_equal(sumw, np.zeros((3,3,3)))
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, np.zeros((3,3,3)))
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     #change topology only
     pos1 = np.copy(pos0)
     edges1 = np.array([
@@ -168,9 +173,10 @@ def test_2D_4branches():
         for j in sorted(js)
         if i<j
         ] + [[1,4], [2,3]])
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges1, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges1, grid)
     assert_array_equal(countc, [[0, 2, 0], [2, 4, 2], [0, 2, 0]])
-    assert_array_almost_equal(sumw, sumB)
+    sumB2 = C2B(sumC)
+    assert_array_almost_equal(sumB, sumB2)
     assert_array_equal(counta, [[0, 1, 0], [1, 2, 1], [0, 1, 0]])
     assert_array_equal(countd, [[1, 2, 1], [2, 0, 2], [1, 2, 1]])
     assert_array_almost_equal(sumT, [
@@ -208,14 +214,15 @@ def test_2D_3branches():
     ])
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count0, count)
-    assert_array_almost_equal(sumw, sumw1-sumw0)
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, sumw1-sumw0)
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     #flip the motif along x
     pos1 = np.array([[0,0], [1,0], [0,-1], [0,1]], dtype=float)
     sumw1, count1 = bin_texture(pos1, edges, grid)
@@ -227,18 +234,19 @@ def test_2D_3branches():
     ])
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count, [[0, 0, 0], [3, 3, 3], [0, 0, 0]])
-    assert_array_almost_equal(sumw, [
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, [
         [[0,0,0], [0,0,0],[0,0,0]],
         [[0,2,0], [0,0,0], [0,-2,0]],
         [[0,0,0], [0,0,0],[0,0,0]]
     ])
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     #rotate the motif by 90°
     pos1 = np.array([[0,0], [0,-1], [1,0], [-1,0]], dtype=float)
     sumw1, count1 = bin_texture(pos1, edges, grid)
@@ -250,18 +258,19 @@ def test_2D_3branches():
     ])
     sumw, count = bin_geometrical_changes(pos0, pos1, edges, grid)
     assert_array_equal(count, [[0, 0, 0], [0, 3, 0], [0, 0, 0]])
-    assert_array_almost_equal(sumw, [
+    sumB = C2B(sumw)
+    assert_array_almost_equal(sumB, [
         [[0,0,0], [0,0,0],[0,0,0]],
         [[0,0,0], [1,0,-1], [0,0,0]],
         [[0,0,0], [0,0,0],[0,0,0]]
     ])
     ## there should be no topology change
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges, edges, grid)
     assert_array_equal(count, countc)
-    assert_array_almost_equal(sumw, sumB)
+    assert_array_almost_equal(sumw, sumC)
     assert_array_equal(counta, np.zeros_like(count))
     assert_array_equal(countd, np.zeros_like(count))
-    assert_array_almost_equal(sumT, np.zeros_like(sumw))
+    assert_array_almost_equal(sumT, np.zeros_like(sumB))
     #change topology only
     pos1 = np.copy(pos0)
     edges1 = np.array([
