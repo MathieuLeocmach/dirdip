@@ -7,7 +7,7 @@ Created on Tue Nov 12 14:48:39 2019
 """
 
 from texture.grid import RegularGrid
-from texture.texture import bin_texture, bin_changes, bonds_appeared_disapeared
+from texture.texture import bin_texture, bin_changes, bonds_appeared_disapeared, C2B
 from texture.display import display2Dcount, display_matrices, display_pos_edges
 import os
 import trackpy as tp
@@ -35,7 +35,7 @@ lg = 1
 grid = RegularGrid([110,200], [30,30], [10,10])
 Mtot = np.zeros(grid.shape+(3,))
 Ntot = np.zeros(grid.shape, np.int64)
-Btot = np.zeros_like(Mtot)
+Ctot = np.zeros_like(Mtot)
 Ttot = np.zeros_like(Mtot)
 Na_tot = np.zeros_like(Ntot)
 Nd_tot = np.zeros_like(Ntot)
@@ -71,8 +71,8 @@ for f in f0:
         Ntot += count
     
     #bin changes between the two frames
-    sumB, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges0, edges1, grid)
-    Btot += sumB
+    sumC, countc, sumT, counta, countd = bin_changes(pos0, pos1, edges0, edges1, grid)
+    Ctot += sumC
     Ttot += sumT
     Na_tot += counta
     Nd_tot += countd
@@ -85,7 +85,8 @@ Ntot_nz = 1/np.minimum(1, Ntot)
 ### texture, in length**2
 M = Mtot * Ntot_nz[...,None]
 ### geometrical changes, in length**2/time (probably px**2*fps)
-B = 2 * Btot * Ntot_nz[...,None]
+C = 2 * Ctot * Ntot_nz[...,None]
+B = C2B(C)
 ### topological changes, in length**2/time (probably px**2*fps)
 T = 2 * Ttot * Ntot_nz[...,None]
 
