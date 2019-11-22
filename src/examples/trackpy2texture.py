@@ -35,7 +35,7 @@ lg = 1
 grid = RegularGrid([110,200], [30,30], [10,10])
 Mtot = np.zeros(grid.shape+(3,))
 Ntot = np.zeros(grid.shape, np.int64)
-Ctot = np.zeros_like(Mtot)
+Ctot = np.zeros(grid.shape+(2,2))
 Ttot = np.zeros_like(Mtot)
 Na_tot = np.zeros_like(Ntot)
 Nd_tot = np.zeros_like(Ntot)
@@ -85,7 +85,7 @@ Ntot_nz = 1/np.maximum(1, Ntot)
 ### texture, in length**2
 M = Mtot * Ntot_nz[...,None]
 ### geometrical changes, in length**2/time (probably px**2*fps)
-C = 2 * Ctot * Ntot_nz[...,None]
+C = 2 * Ctot * Ntot_nz[...,None, None]
 B = C2B(C)
 ### topological changes, in length**2/time (probably px**2*fps)
 T = 2 * Ttot * Ntot_nz[...,None]
