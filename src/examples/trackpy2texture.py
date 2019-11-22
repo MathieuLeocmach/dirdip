@@ -79,7 +79,7 @@ for f in f0:
     Nc_tot += countc
     
 #from sums to averages
-Ntot_nz = 1/np.minimum(1, Ntot)
+Ntot_nz = 1/np.maximum(1, Ntot)
 
 ## matrices
 ### texture, in length**2
