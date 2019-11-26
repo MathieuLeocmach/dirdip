@@ -136,6 +136,13 @@ class Grid:
                 raise ValueError('`bins[{}]` must be monotonically increasing'.format(d))
         self.edges = edges
         
+    def save(self, fname):
+        """Save to a file in a human readable format"""
+        with open(fname, 'w') as f:
+            f.write("Grid\n")
+            for edge in self.edges:
+                f.write(" ".join(["%g"%e for e in edge]) + "\n")
+        
     @property
     def ndim(self):
         """Dimensionality of the grid"""
@@ -246,6 +253,14 @@ class RegularGrid(Grid):
         self.steps = np.array(steps)
         self.nsteps = np.array(nsteps, np.int64) + 1
         
+    def save(self, fname):
+        """Save to a file in a human readable format"""
+        with open(fname, 'w') as f:
+            f.write("Regular\n")
+            f.write(" ".join(["%g"%o for o in self.offsets]) + "\n")
+            f.write(" ".join(["%g"%s for s in self.steps]) + "\n")
+            f.write(" ".join(["%g"%n for n in self.nsteps -1]) + "\n")
+        
     @property
     def ndim(self):
         """Dimensionality of the grid"""
@@ -280,3 +295,18 @@ class RegularGrid(Grid):
             for x, offset, step, nstep in zip(pos.T, self.offsets, self.steps, self.nsteps)
             ])
 
+def load(fname):
+    """Load a grid from a file"""
+    with open(fname) as f:
+        typ = f.readline()[:-1]
+        if typ == "Grid":
+            edges = [map(float, line[:-1].split()) for line in f]
+            return Grid(edges)
+        elif typ == "Regular":
+            offsets = np.array(list(map(float, f.readline()[-1].split())))
+            steps = np.array(list(map(float, f.readline()[-1].split())))
+            nsteps = np.array(list(map(int, f.readline()[-1].split())))
+            return RegularGrid(offsets, steps, nsteps)
+                
+        
+            
