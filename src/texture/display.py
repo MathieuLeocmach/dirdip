@@ -60,3 +60,8 @@ def display_matrices(ax, grid, texture, scale = None):
     )
     ax.add_collection(ma)
     return ec
+
+def set_ax_lims(ax, grid):
+    """Set x and y limits according to the grid"""
+    ax.set_xlim(*grid.low_high_edges(0))
+    ax.set_ylim(*grid.low_high_edges(1))

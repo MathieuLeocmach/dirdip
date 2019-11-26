@@ -158,6 +158,10 @@ class Grid:
             p = np.multiply.outer(p, np.diff(e))
         return p.reshape(self.shape)
     
+    def low_high_edges(self, dim):
+        """Lowest and highest edges in dimension dim"""
+        return self.edges[dim][0], self.edges[dim][-1]
+    
     def digitize(self, pos):
         """snap positions to grid, assigning to it the index of the edge immediately larger to it.
             Coordinates that are below the lowest edge will have index 0.
@@ -255,6 +259,10 @@ class RegularGrid(Grid):
     def areas(self):
         """areas of the grid cells"""
         return np.full(self.shape, np.prod(self.steps))
+    
+    def low_high_edges(self, dim):
+        """Lowest and highest edges in dimension dim"""
+        return self.offsets[dim], self.offsets[dim] + self.steps[dim] * (self.nsteps[dim]-1)
     
     def digitize(self, pos):
         """snap positions to grid, assigning to it the index of the edge immediately larger to it.
