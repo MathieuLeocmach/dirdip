@@ -166,7 +166,7 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
 
    
 def statistical_velocity_gradient(M, C):
-    """Computes the statistical velocity gradient V from the texture matrix M and matrix C"""
+    """Computes the statistical velocity gradient V from the texture matrix M and matrix C. Keeps only the symetric coefficients."""
     m = tri2square(M)
     #set texture to unity matrix where its determinant is zero (impossible to inverse)
     #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
@@ -190,3 +190,16 @@ def statistical_rotation_rate(M, C):
     if len(i) == 1:
         return omega[...,i[0],j[0]]
     return omega[...,i,j]
+
+def statistical_topological_rearrangement_rate(M, T):
+    """Computes the statistical topological rearrangement rate P from the texture matrix M and topological change matrix T. Keeps only the symetric coefficients."""
+    m = tri2square(M)
+    t = tri2square(T)
+    #set texture to unity matrix where its determinant is zero (impossible to inverse)
+    #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
+    m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
+    inv_m = np.linalg.inv(m)
+    p = - (np.matmul(inv_m, t) - np.matmul(t, inv_m)) / 4
+    #This should be symetric within numerical errors, so we keep only the upper triangle
+    i,j = np.triu_indices(p.shape[-1])
+    return p[...,i,j]
