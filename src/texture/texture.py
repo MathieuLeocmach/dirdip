@@ -79,6 +79,18 @@ def C2B(C):
     i,j = np.triu_indices(C.shape[-1])
     return B[...,i,j]
 
+def tri2square(M):
+    """Convert a triangular representation to square symetric"""
+    #dimension of space from the number of upper triangular coefficients
+    d = int((np.sqrt(1 + 8 * M.shape[-1]) - 1)/2)
+    m = np.zeros(M.shape[:-1]+(d,d), dtype=M.dtype)
+    i,j = np.triu_indices(d)
+    #fill upper triangle and diagonal
+    m[...,i,j] = M
+    #fill lower triangle and diagonal
+    m[...,j,i] = M
+    return m
+
 def bonds_set_to_array(s):
     if len(s)==0:
         return np.zeros((0,2), dtype=np.int64)
@@ -151,3 +163,8 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     #bin the geometrical changes of the conserved bonds
     sumC, countc = bin_geometrical_changes(pos0, pos1, pairsc, grid)
     return sumC, countc, sumwa-sumwd, counta, countd
+
+def MC2V(M,C):
+    """Compute the statistical symmetrised velocity gradient from the texture M and matrix C"""
+    Mmat = M[...,[0,1,1,2]].reshape(M.shape[:-1]+(2,2))
+    invM = np.linalg.inv(M)
