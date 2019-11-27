@@ -164,7 +164,15 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     sumC, countc = bin_geometrical_changes(pos0, pos1, pairsc, grid)
     return sumC, countc, sumwa-sumwd, counta, countd
 
-def MC2V(M,C):
-    """Compute the statistical symmetrised velocity gradient from the texture M and matrix C"""
-    Mmat = M[...,[0,1,1,2]].reshape(M.shape[:-1]+(2,2))
-    invM = np.linalg.inv(M)
+   
+def statistical_velocity_gradient(M, C):
+    """Computes the statistical velocity gradient gradient V from the texture matrix M and matrix C"""
+    m = tri2square(M)
+    #set texture to unity matrix where its determinant is zero (impossible to inverse)
+    #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
+    m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
+    inv_m = np.linalg.inv(m)
+    v = (np.matmul(inv_m, C) + np.matmul(np.transpose(C, (0,1,3,2)), inv_m)) / 2
+    #This should be symetric within numerical errors, so we keep only the upper triangle
+    i,j = np.triu_indices(v.shape[-1])
+    return v[...,i,j]
