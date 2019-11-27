@@ -123,7 +123,7 @@ for ind, act in enumerate(select_act):
     nc = 2 * Nc_tot * Ntot_nz
     
     #display things!
-    fig, axs = plt.subplots(2,3, figsize=(10,10),sharex=True, sharey=True, subplot_kw={'aspect':'equal'})
+    fig, axs = plt.subplots(3,3, figsize=(10,10),sharex=True, sharey=True, subplot_kw={'aspect':'equal'})
     fig.canvas.set_window_title('Act {}'.format(act))
     
     display_matrices(axs[0,0], grid, M * mask[...,None])
@@ -147,6 +147,14 @@ for ind, act in enumerate(select_act):
     
     #
     axs[1,2].title.set_text('Conserved bonds')
+    
+    V, Omega, P = statistical_relative_deformations(M, C, T)
+    display.display_matrices(axs[2,0], grid, V)
+    axs[2,0].title.set_text('Statistical velocity gradient V')
+    display.display2Dcount(axs[2,1], grid, Omega, cmap=plt.cm.seismic, vmin=-np.abs(Omega).max(), vmax=np.abs(Omega).max())
+    axs[2,1].title.set_text(r'Statistical rotation rate $\Omega$')
+    display.display_matrices(axs[2,2], grid, P)
+    axs[2,2].title.set_text('Statistical topological rearrangement rate P')
 
 
 plt.show()

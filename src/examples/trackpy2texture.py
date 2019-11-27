@@ -99,7 +99,7 @@ nd = 2 * Nd_tot * Ntot_nz
 nc = 2 * Nc_tot * Ntot_nz
 
 # display things!
-fig, axs = plt.subplots(2,3, sharex=True, sharey=True, subplot_kw={'aspect':'equal'})
+fig, axs = plt.subplots(3,3, sharex=True, sharey=True, subplot_kw={'aspect':'equal'})
 display_matrices(axs[0,0], grid, M)
 display_matrices(axs[0,1], grid, B)
 display_matrices(axs[0,2], grid, T)
@@ -107,5 +107,11 @@ ima = display2Dcount(axs[1,0], grid, nd)
 display2Dcount(axs[1,1], grid, na)
 fig.colorbar(display2Dcount(axs[1,2], grid, nc), ax=axs[1, 2], location='bottom')
 fig.colorbar(ima, ax=axs[1, :2], shrink=0.6, location='bottom')
+
+V, Omega, P = statistical_relative_deformations(M, C, T)
+#fig, axs = plt.subplots(1,3, sharex=True, sharey=True, subplot_kw={'aspect': 'equal'}, figsize=(30,10))
+display.display_matrices(axs[2,0], grid, V)
+display.display2Dcount(axs[2,1], grid, Omega, cmap=plt.cm.seismic, vmin=-np.abs(Omega).max(), vmax=np.abs(Omega).max())
+display.display_matrices(axs[2,2], grid, P)
 
 plt.show()
