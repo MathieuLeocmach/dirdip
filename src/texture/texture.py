@@ -166,7 +166,7 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
 
    
 def statistical_velocity_gradient(M, C):
-    """Computes the statistical velocity gradient gradient V from the texture matrix M and matrix C"""
+    """Computes the statistical velocity gradient V from the texture matrix M and matrix C"""
     m = tri2square(M)
     #set texture to unity matrix where its determinant is zero (impossible to inverse)
     #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
@@ -176,3 +176,17 @@ def statistical_velocity_gradient(M, C):
     #This should be symetric within numerical errors, so we keep only the upper triangle
     i,j = np.triu_indices(v.shape[-1])
     return v[...,i,j]
+
+def statistical_rotation_rate(M, C):
+    """Computes the statistical rotation rate Omega from the texture matrix M and matrix C. Keeps only the assymetric coefficients."""
+    m = tri2square(M)
+    #set texture to unity matrix where its determinant is zero (impossible to inverse)
+    #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
+    m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
+    inv_m = np.linalg.inv(m)
+    omega = (np.matmul(inv_m, C) - np.matmul(np.transpose(C, (0,1,3,2)), inv_m)) / 2
+    #This should be antisymetric within numerical errors, so we keep only the upper triangle, diagonal excluded
+    i,j = np.triu_indices(omega.shape[-1], 1)
+    if len(i) == 1:
+        return omega[...,i[0],j[0]]
+    return omega[...,i,j]
