@@ -367,6 +367,15 @@ class PolarGrid(Grid):
         """Shape of the output arrays"""
         return (len(self.radii)-1, self.ncells.max())
     
+    def mesh(self):
+        """Obtain the coordinates of cell centers"""
+        rs = np.repeat(0.5*(self.raddi[1:] + self.radii[:-1]), self.shape[-1]).reshape(self.shape)
+        thetas = 2*np.pi * (self.theta_offset + (0.5+np.arange(self.ncells.max())))[None,:] / self.ncells[:,None]
+        #may need to rotate 90° to be consistent with axis orientation
+        X = rs * np.cos(thetas)
+        Y = rs * np.sin(thetas)
+        return np.column_stack((X.ravel(), Y.ravel()))
+    
     def areas(self):
         """areas of the grid cells"""
         return np.repeat(np.diff(self.radii**2)/self.ncells, self.shape[-1]).reshape(self.shape)
