@@ -134,7 +134,7 @@ class Grid:
         for d, e in enumerate(edges):
             if np.any(e[:-1] > e[1:]):
                 raise ValueError('`bins[{}]` must be monotonically increasing'.format(d))
-        self.edges = edges
+        self.edges = [np.array(e) for e in edges]
         
     def save(self, fname):
         """Save to a file in a human readable format"""
@@ -333,9 +333,9 @@ class PolarGrid(Grid):
             raise ValueError('`radii` must be positive')
         if np.any(radii[:-1] > radii[1:]):
             raise ValueError('`radii` must be monotonically increasing')
-        if np.iscallar(ncells):
+        if np.isscalar(ncells):
             ncells = np.full(len(radii)-1, ncells)
-        if np.iscallar(theta_offset):
+        if np.isscalar(theta_offset):
             theta_offset = np.full(len(radii)-1, theta_offset)
         assert len(radii) == len(ncells)+1
         assert len(theta_offset) == len(ncells)
@@ -343,6 +343,10 @@ class PolarGrid(Grid):
         self.sqradii = self.radii**2
         self.ncells = np.array(ncells, np.int64)
         self.theta_offset = np.array(theta_offset)
+        self.encells = np.zeros(len(ncells)+2)
+        self.encells[1:-1] = self.ncells
+        self.etheta_offset = np.zeros(len(theta_offset)+2)
+        self.etheta_offset[1:-1] = self.theta_offset
         
     def save(self, fname):
         """Save to a file in a human readable format"""
@@ -369,8 +373,8 @@ class PolarGrid(Grid):
     
     def mesh(self):
         """Obtain the coordinates of cell centers"""
-        rs = np.repeat(0.5*(self.raddi[1:] + self.radii[:-1]), self.shape[-1]).reshape(self.shape)
-        thetas = 2*np.pi * (self.theta_offset + (0.5+np.arange(self.ncells.max())))[None,:] / self.ncells[:,None]
+        rs = np.repeat(0.5*(self.radii[1:] + self.radii[:-1]), self.shape[-1]).reshape(self.shape)
+        thetas = 2*np.pi * (self.theta_offset[:,None] + (0.5+np.arange(self.ncells.max()))[None,:]) / self.ncells[:,None]
         #may need to rotate 90° to be consistent with axis orientation
         X = rs * np.cos(thetas)
         Y = rs * np.sin(thetas)
@@ -396,7 +400,7 @@ class PolarGrid(Grid):
         ir = np.searchsorted(self.sqradii, np.sum(pos**2, -1), side='right')
         theta = np.arctan2(pos[:,1], pos[:,0])
         itheta = digitize_regular(
-            ((theta - self.theta_offset[ir])/np.pi + 1) * self.ncells[ir],
+            ((theta - self.etheta_offset[ir])/np.pi + 1) * self.encells[ir],
             0, 2, self.ncells.max()
         )
         return np.column_stack((ir, itheta))
