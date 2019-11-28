@@ -259,7 +259,7 @@ class RegularGrid(Grid):
             f.write("Regular\n")
             f.write(" ".join(["%g"%o for o in self.offsets]) + "\n")
             f.write(" ".join(["%g"%s for s in self.steps]) + "\n")
-            f.write(" ".join(["%g"%n for n in self.nsteps -1]) + "\n")
+            f.write(" ".join(["%d"%n for n in self.nsteps -1]) + "\n")
         
     @property
     def ndim(self):
@@ -294,6 +294,86 @@ class RegularGrid(Grid):
             digitize_regular(x, offset, step, nstep)
             for x, offset, step, nstep in zip(pos.T, self.offsets, self.steps, self.nsteps)
             ])
+    
+    
+    
+class PolarGrid(Grid):
+    """A class to manage 2-dimensional polar grids"""
+    def __init__(self, radii, ncells, theta_offset=0):
+        """A ploar grid is made of N concentric rings containing C equally-spaced cells.
+        
+        
+        Parameters
+        ----------
+        radii : sequence of N+1 monotonically increasing radii
+        
+        ncells : integer or sequence of N integers
+        
+        theta_offset : angle of the first edge, or sequence of N angles"""
+        assert len(radii) > 1
+        if np.any(np.array(radii)<0):
+            raise ValueError('`radii` must be positive')
+        if np.any(radii[:-1] > radii[1:]):
+            raise ValueError('`radii` must be monotonically increasing')
+        if np.iscallar(ncells):
+            ncells = np.full(len(radii)-1, ncells)
+        if np.iscallar(theta_offset):
+            theta_offset = np.full(len(radii)-1, theta_offset)
+        assert len(radii) == len(ncells)+1
+        assert len(theta_offset) == len(ncells)
+        self.radii = np.array(radii)
+        self.sqradii = self.radii**2
+        self.ncells = np.array(ncells, np.int64)
+        self.theta_offset = np.array(theta_offset)
+        
+    def save(self, fname):
+        """Save to a file in a human readable format"""
+        with open(fname, 'w') as f:
+            f.write("Polar\n")
+            f.write(" ".join(["%g"%o for o in self.radii]) + "\n")
+            f.write(" ".join(["%d"%s for s in self.ncells]) + "\n")
+            f.write(" ".join(["%g"%n for n in self.theta_offset]) + "\n")
+            
+    @property
+    def ndim(self):
+        """Dimensionality of the grid"""
+        return 2
+    
+    @property
+    def nbins(self):
+        """Shape of the array used for binning, margins included"""
+        return (len(self.radii)+1, self.ncells.max()+2)
+    
+    @property
+    def shape(self):
+        """Shape of the output arrays"""
+        return (len(self.radii)-1, self.ncells.max())
+    
+    def areas(self):
+        """areas of the grid cells"""
+        return np.repeat(np.diff(self.radii**2)/self.ncells, self.shape[-1]).reshape(self.shape)
+        
+    def low_high_edges(self, dim):
+        """Lowest and highest edges in dimension dim"""
+        return -self.radii[-1], self.radii[-1]
+        
+    def digitize(self, pos):
+        """snap positions to grid, assigning to it the index of the edge immediately larger to it.
+            Coordinates that are below the offset will have index 0.
+            Coordinates that are above the highest edge will have index steps[d].
+        
+        Parameters
+        ----------
+        pos : A (P,D) array of coordinates
+        """
+        ir = np.searchsorted(self.sqradii, np.sum(pos**2, -1), side='right')
+        theta = np.arctan2(pos[:,1], pos[:,0])
+        itheta = digitize_regular(
+            ((theta - self.theta_offset[ir])/np.pi + 1) * self.ncells[ir],
+            0, 2, self.ncells.max()
+        )
+        return np.column_stack((ir, itheta))
+        
 
 def load(fname):
     """Load a grid from a file"""
