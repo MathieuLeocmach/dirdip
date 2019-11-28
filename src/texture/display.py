@@ -37,7 +37,7 @@ def display_matrices(ax, grid, texture, scale = None):
     if scale is None: 
         #scale = 1
         ellipse_areas = np.pi * np.abs(np.prod(evalues, axis=-1))
-        rarea = ellipse_areas / grid.areas()
+        rarea = ellipse_areas / np.rot90(grid.areas())
         scale = 1/np.nanpercentile(np.sqrt(rarea), 90)
         
     
