@@ -8,14 +8,15 @@ def display_pos_edges(ax, pos, pairs, kw_pos = {'marker': 'o', 'c': 'k'}, kw_edg
     ax.add_collection(lc)
     ax.scatter(*pos.T, **kw_pos)
     
-def display2Dcount(ax, grid, count):
+def display2Dcount(ax, grid, count, **kw_imshow):
     """Display in a matplotlib axis the result of grid.count for a 2D grid"""
     return ax.imshow(
         np.rot90(count), 
         extent=(
             grid.offsets[0], grid.offsets[0]+grid.steps[0]*(grid.nsteps[0]-1), 
             grid.offsets[1], grid.offsets[1]+grid.steps[1]*(grid.nsteps[1]-1)
-        )
+        ),
+        **kw_imshow,
     )
     
 def display_matrices(ax, grid, texture, scale = None):
