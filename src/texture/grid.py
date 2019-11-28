@@ -158,6 +158,15 @@ class Grid:
         """Shape of the output arrays"""
         return tuple(s-2 for s in self.nbins)
     
+    def mesh(self):
+        """Obtain the coordinates of cell centers"""
+        if self.ndim != 2:
+            raise NotImplemented("mesh is implemented only in 2D")
+        x,y = np.transpose([0.5*(e[1:]+e[:-1]) for e in self.edges])
+        #rotate 90° to be consistent with axis orientation
+        X, Y = np.meshgrid(x, y[::-1])
+        return np.column_stack((X.ravel(), Y.ravel()))
+    
     def areas(self):
         """areas of the grid cells"""
         p = 1.
@@ -270,6 +279,15 @@ class RegularGrid(Grid):
     def nbins(self):
         """Shape of the array used for binning, margins included"""
         return tuple(n+1 for n in self.nsteps)
+    
+    def mesh(self):
+        """Obtain the coordinates of cell centers"""
+        if self.ndim != 2:
+            raise NotImplemented("mesh is implemented only in 2D")
+        x,y = np.transpose(self.offsets + (0.5+np.transpose([np.arange(n) for n in self.nsteps-1])) * self.steps)
+        #rotate 90° to be consistent with axis orientation
+        X, Y = np.meshgrid(x, y[::-1])
+        return np.column_stack((X.ravel(), Y.ravel()))
     
     def areas(self):
         """areas of the grid cells"""
