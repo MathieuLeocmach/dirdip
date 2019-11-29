@@ -158,13 +158,17 @@ class Grid:
         """Shape of the output arrays"""
         return tuple(s-2 for s in self.nbins)
     
+    def mask(self):
+        """What are the useful points in the output?"""
+        return np.ones(self.shape, bool)
+    
     def mesh(self):
         """Obtain the coordinates of cell centers"""
         if self.ndim != 2:
             raise NotImplemented("mesh is implemented only in 2D")
         x,y = np.transpose([0.5*(e[1:]+e[:-1]) for e in self.edges])
-        #rotate 90° to be consistent with axis orientation
-        X, Y = np.meshgrid(x, y[::-1])
+        #transpose coordinates to be consistent with input
+        Y, X = np.meshgrid(y, x)
         return np.column_stack((X.ravel(), Y.ravel()))
     
     def areas(self):
@@ -212,7 +216,7 @@ class Grid:
         If a second set of coordinates qos is defined, bins only when both coordinates belong to the same grid element"""
         ipos = self.check_digitize(pos, qos)
         sumw, count = bin_weight_countdd(ipos, self.nbins, weights=fields)
-        #trim sides where the coordinates outside of the grid were binned
+        #trim sides where the coordinates outside of the grid were binned.
         core = self.ndim*(slice(1, -1),)
         return sumw[core], count[core]
     
@@ -221,7 +225,7 @@ class Grid:
         If a second set of coordinates qos is defined, bins only when both coordinates belong to the same grid element"""
         ipos = self.check_digitize(pos, qos)
         count = bin_weight_countdd(ipos, self.nbins)
-        #trim sides where the coordinates outside of the grid were binned
+        #trim sides where the coordinates outside of the grid were binned.
         core = self.ndim*(slice(1, -1),)
         return count[core]
     
@@ -285,8 +289,8 @@ class RegularGrid(Grid):
         if self.ndim != 2:
             raise NotImplemented("mesh is implemented only in 2D")
         x,y = np.transpose(self.offsets + (0.5+np.transpose([np.arange(n) for n in self.nsteps-1])) * self.steps)
-        #rotate 90° to be consistent with axis orientation
-        X, Y = np.meshgrid(x, y[::-1])
+        #transpose coordinates to be consistent with input
+        Y, X = np.meshgrid(y, x)
         return np.column_stack((X.ravel(), Y.ravel()))
     
     def areas(self):
@@ -371,14 +375,24 @@ class PolarGrid(Grid):
         """Shape of the output arrays"""
         return (len(self.radii)-1, self.ncells.max())
     
+    def mask(self):
+        """What are the useful points in the output?"""
+        m = np.zeros(self.shape, bool)
+        for i, n in enumerate(self.ncells):
+            m[i, :n] = True
+        return m
+    
     def mesh(self):
         """Obtain the coordinates of cell centers"""
         rs = np.repeat(0.5*(self.radii[1:] + self.radii[:-1]), self.shape[-1]).reshape(self.shape)
         thetas = 2*np.pi * (self.theta_offset[:,None] + (0.5+np.arange(self.ncells.max()))[None,:]) / self.ncells[:,None]
+        #case of a single cell that must be shown at the center
+        rs[self.ncells==1] = 0
         #may need to rotate 90° to be consistent with axis orientation
         X = rs * np.cos(thetas)
         Y = rs * np.sin(thetas)
-        return np.column_stack((X.ravel(), Y.ravel()))
+        mask = self.mask()
+        return np.column_stack((X[mask], Y[mask]))
     
     def areas(self):
         """areas of the grid cells"""
@@ -400,8 +414,8 @@ class PolarGrid(Grid):
         ir = np.searchsorted(self.sqradii, np.sum(pos**2, -1), side='right')
         theta = np.arctan2(pos[:,1], pos[:,0])
         itheta = digitize_regular(
-            ((theta - self.etheta_offset[ir])/np.pi + 1) * self.encells[ir],
-            0, 2, self.ncells.max()
+            np.mod((theta - self.etheta_offset[ir])/(2*np.pi), 1) * self.encells[ir],
+            0, 1, self.ncells.max()
         )
         return np.column_stack((ir, itheta))
         

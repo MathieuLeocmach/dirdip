@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.collections import EllipseCollection, LineCollection
+from .texture import tri2square
 
 def display_pos_edges(ax, pos, pairs, kw_pos = {'marker': 'o', 'c': 'k'}, kw_edges = {'color': 'r'}):
     """Display on a matplotlib axis positions and bonds between them"""
@@ -22,13 +23,16 @@ def display2Dcount(ax, grid, count, **kw_imshow):
 def display_matrices(ax, grid, texture, scale = None):
     """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue. A circle is when the two eigenvalues are equal in absolute value."""
     XY = grid.mesh()
+    mask = grid.mask()
+    #convert the texture back to an array of matrices
+    mat = tri2square(texture)
     #compute egenvalues and eigenvectors of texture for each cell of the grid
-    evalues, evectors = np.linalg.eigh(np.rot90(texture[...,[0,1,1,2]].reshape(texture.shape[:-1]+(2,2))))
+    evalues, evectors = np.linalg.eigh(mat)
     #width and height are the larger and smaller eigenvalues respectively
-    ww = evalues[...,1].ravel()
-    hh = evalues[...,0].ravel()
+    ww = evalues[...,1][mask]
+    hh = evalues[...,0][mask]
     #angle is given by the angle of the larger eigenvector
-    aa = np.rad2deg(np.arctan2(evectors[...,1,1], evectors[...,0,1])).ravel()
+    aa = np.rad2deg(np.arctan2(evectors[...,1,1], evectors[...,0,1]))[mask]
     #sum of the eigenvalues (trace of the matrix)
     trace = ww+hh#np.where(np.abs(ww)>np.abs(hh), ww, hh)#ww*hh
     #color
@@ -37,8 +41,8 @@ def display_matrices(ax, grid, texture, scale = None):
     if scale is None: 
         #scale = 1
         ellipse_areas = np.pi * np.abs(np.prod(evalues, axis=-1))
-        rarea = ellipse_areas / np.rot90(grid.areas())
-        scale = 1/np.nanpercentile(np.sqrt(rarea), 90)
+        rarea = ellipse_areas / grid.areas()
+        scale = 1/np.nanpercentile(np.sqrt(rarea[mask]), 90)
         
     
     #show ellipses
@@ -50,7 +54,7 @@ def display_matrices(ax, grid, texture, scale = None):
     ec.set_array(trace)
     ax.add_collection(ec)
     #major and minor axes (only for positive eigenvalues)
-    xyps = scale * np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2)).reshape(2*len(ww),2)*0.5
+    xyps = scale * np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2))[mask].reshape(2*len(ww),2)*0.5
     ma = LineCollection(
         [[-xyp, xyp] for xyp in xyps],
         offsets=np.repeat(XY, 2, axis=0),

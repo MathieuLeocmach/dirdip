@@ -46,6 +46,12 @@ def test_grid2D():
     grid = Grid([np.arange(0,10,2), np.arange(-3,15,3)])
     assert_equal(grid.ndim, 2)
     assert_array_equal(grid.edges[0], np.arange(0,10,2))
+    assert_array_equal(grid.mesh(), [
+        [1,-1.5], [1,1.5], [1,4.5], [1, 7.5], [1, 10.5],
+        [3,-1.5], [3,1.5], [3,4.5], [3, 7.5], [3, 10.5], 
+        [5,-1.5], [5,1.5], [5,4.5], [5, 7.5], [5, 10.5], 
+        [7,-1.5], [7,1.5], [7,4.5], [7, 7.5], [7, 10.5], 
+    ])
     assert_array_equal(grid.areas(), np.full((4,5), 6))
     #inputs a list of zero coordinates
     xs = np.zeros((0,2))
@@ -182,3 +188,34 @@ def test_regulargrid2D():
         [0, 1, 1, 0, 0],
         [0, 0, 1, 0, 0],
         [0, 0, 0, 1, 0]])
+
+def test_Polargrid2D():
+    grid = PolarGrid([0,1,2,3,5], [1,4,4,3])
+    assert_equal(grid.ndim, 2)
+    XY = grid.mesh()
+    assert_array_almost_equal(np.sqrt(np.sum(XY**2,-1)), np.array([
+        0,
+        1.5,1.5,1.5,1.5,
+        2.5,2.5,2.5,2.5,
+        4,4,4
+    ]))
+    assert_array_almost_equal(np.arctan2(XY[1:,1], XY[1:,0])/(2*np.pi), [1/8, 3/8, -3/8, -1/8, 1/8, 3/8, -3/8, -1/8, 1/6, 3/6, -1/6])
+    assert_array_almost_equal(grid.mesh(), np.array([
+        0,
+        1.5,1.5,1.5,1.5,
+        2.5,2.5,2.5,2.5,
+        4,4,4
+    ])[:,None] * np.column_stack((
+        np.cos(2*np.pi*np.array([0, 1/8, 3/8, 5/8, 7/8, 1/8, 3/8, 5/8, 7/8, 1/6, 3/6, 5/6])),
+        np.sin(2*np.pi*np.array([0, 1/8, 3/8, 5/8, 7/8, 1/8, 3/8, 5/8, 7/8, 1/6, 3/6, 5/6])),
+    )))
+    assert_array_almost_equal(
+        grid.digitize(np.array([[0.1,0.1],[0.5,0.5],[1.1,0.1], [1.1,1.1], [-1.1,1.1], [-1.1,-1.1], [1.1,-1.1]])) - 1, 
+        [[0,0],[0,0], [1,0], [1,0], [1,1], [1,2], [1,3]]
+    )
+    assert_array_almost_equal(grid.digitize(grid.mesh())-1, [
+        [0,0],
+        [1,0], [1,1], [1,2], [1,3],
+        [2,0], [2,1], [2,2], [2,3],
+        [3,0], [3,1], [3,2],
+    ])
