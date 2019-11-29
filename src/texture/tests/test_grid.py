@@ -219,3 +219,17 @@ def test_Polargrid2D():
         [2,0], [2,1], [2,2], [2,3],
         [3,0], [3,1], [3,2],
     ])
+    #theta_offset
+    grid = PolarGrid([0,1,2,3,5], [1,4,4,3], np.pi/4)
+    assert_equal(grid.ndim, 2)
+    XY = grid.mesh()
+    assert_array_almost_equal(np.sqrt(np.sum(XY**2,-1)), np.array([
+        0,
+        1.5,1.5,1.5,1.5,
+        2.5,2.5,2.5,2.5,
+        4,4,4
+    ]))
+    assert_array_almost_equal(
+        np.mod(np.arctan2(XY[1:,1], XY[1:,0])/(2*np.pi)+1, 1), 
+        np.mod(np.array([1/8, 3/8, 5/8, 7/8, 1/8, 3/8, 5/8, 7/8, 1/6, 3/6, 5/6])+1/8, 1)
+    )

@@ -385,7 +385,7 @@ class PolarGrid(Grid):
     def mesh(self):
         """Obtain the coordinates of cell centers"""
         rs = np.repeat(0.5*(self.radii[1:] + self.radii[:-1]), self.shape[-1]).reshape(self.shape)
-        thetas = 2*np.pi * (self.theta_offset[:,None] + (0.5+np.arange(self.ncells.max()))[None,:]) / self.ncells[:,None]
+        thetas = (self.theta_offset[:,None] + 2*np.pi * (0.5+np.arange(self.ncells.max()))[None,:] / self.ncells[:,None])
         #case of a single cell that must be shown at the center
         rs[self.ncells==1] = 0
         #may need to rotate 90° to be consistent with axis orientation
