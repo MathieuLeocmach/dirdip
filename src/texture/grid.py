@@ -411,12 +411,18 @@ class PolarGrid(Grid):
         ----------
         pos : A (P,D) array of coordinates
         """
-        ir = np.searchsorted(self.sqradii, np.sum(pos**2, -1), side='right')
+        rsq = np.sum(pos**2, -1)
+        ir = np.searchsorted(self.sqradii, rsq, side='right')
         theta = np.arctan2(pos[:,1], pos[:,0])
         itheta = digitize_regular(
             np.mod((theta - self.etheta_offset[ir])/(2*np.pi), 1) * self.encells[ir],
             0, 1, self.ncells.max()
         )
+        #count theta=0 in the first cell of the anulus rather than discarding it.
+        itheta[itheta==0] = 1
+        #include the origin if the first annulus is a single cell that includes the origin
+        if self.radii[0] == 0 and self.ncells[0] == 1:
+            ir[ir==0] = 1
         return np.column_stack((ir, itheta))
         
 
