@@ -42,7 +42,12 @@ def display_matrices(ax, grid, texture, scale = None):
         #scale = 1
         ellipse_areas = np.pi * np.abs(np.prod(evalues, axis=-1))
         rarea = ellipse_areas / grid.areas()
-        scale = 1/np.nanpercentile(np.sqrt(rarea[mask]), 90)
+        scale = np.nanpercentile(np.sqrt(rarea[mask]), 90)
+        if scale == 0:
+            scale = np.nanmax(np.sqrt(rarea[mask]))
+            if scale == 0:
+                raise ValueError("All matrices are null")
+        scale = 1/scale
         
     
     #show ellipses
@@ -67,3 +72,12 @@ def set_ax_lims(ax, grid):
     """Set x and y limits according to the grid"""
     ax.set_xlim(*grid.low_high_edges(0))
     ax.set_ylim(*grid.low_high_edges(1))
+    
+def display_polar_grid(ax,grid, color="b"):
+    """Show the limits for the polar grid cells"""
+    for r in grid.radii:
+        ax.add_artist(plt.Circle((0,0), r, fc='none', ec=color))
+    for rs, nc, ot in zip(np.column_stack((grid.radii[:-1], grid.radii[1:])), grid.ncells, grid.theta_offset):
+        if nc==1:continue
+        for theta in 2*np.pi*np.arange(nc)/nc - ot:
+            ax.add_artist(plt.Line2D(np.cos(theta)*rs, np.sin(theta)*rs, c=color))
