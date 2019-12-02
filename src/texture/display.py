@@ -10,7 +10,7 @@ def display_pos_edges(ax, pos, pairs, kw_pos = {'marker': 'o', 'c': 'k'}, kw_edg
     ax.scatter(*pos.T, **kw_pos)
     
 def display2Dcount(ax, grid, count, **kw_imshow):
-    """Display in a matplotlib axis the result of grid.count for a 2D grid"""
+    """Display in a matplotlib axis the result of grid.count for a 2D grid. Valid for RegularGrid only"""
     return ax.imshow(
         np.rot90(count), 
         extent=(
@@ -19,6 +19,15 @@ def display2Dcount(ax, grid, count, **kw_imshow):
         ),
         **kw_imshow,
     )
+
+def display_scalar(ax, grid, scalar, kw_scatter = {'marker': 'o'}):
+    """Display on a matplotlib axis a scalar field defined for each element of a grid. Valid for any type of grid"""
+    XY = grid.mesh()
+    if scalar.shape == grid.shape:
+        sc = scalar[grid.mask()]
+    else:
+        sc = scalar
+    return ax.scatter(XY[:,0], XY[:,1], c = sc, **kw_scatter)
     
 def display_matrices(ax, grid, texture, scale = None):
     """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue. A circle is when the two eigenvalues are equal in absolute value."""
@@ -81,3 +90,4 @@ def display_polar_grid(ax,grid, color="b"):
         if nc==1:continue
         for theta in 2*np.pi*np.arange(nc)/nc - ot:
             ax.add_artist(plt.Line2D(np.cos(theta)*rs, np.sin(theta)*rs, c=color))
+            
