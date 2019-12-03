@@ -82,12 +82,34 @@ def set_ax_lims(ax, grid):
     ax.set_xlim(*grid.low_high_edges(0))
     ax.set_ylim(*grid.low_high_edges(1))
     
-def display_polar_grid(ax,grid, color="b"):
+def draw_polar_grid(ax,grid, color="b"):
     """Show the limits for the polar grid cells"""
     for r in grid.radii:
         ax.add_artist(plt.Circle((0,0), r, fc='none', ec=color))
     for rs, nc, ot in zip(np.column_stack((grid.radii[:-1], grid.radii[1:])), grid.ncells, grid.theta_offset):
         if nc==1:continue
-        for theta in 2*np.pi*np.arange(nc)/nc - ot:
+        for theta in 2*np.pi*np.arange(nc)/nc + ot:
             ax.add_artist(plt.Line2D(np.cos(theta)*rs, np.sin(theta)*rs, c=color))
+            
+def fill_polar_grid(ax, grid, scalar, definition=45, **kwarg):
+    """Display on a matplotlib axis a scalar field defined for each element of a polar grid."""
+    if scalar.shape == grid.shape:
+        data = [s[:nc] for s, nc in zip(scalar, grid.ncells)]
+    else:
+        cnc = np.concatenate([0], np.cumsum(grid.ncells))
+        data = [scalar[i:j] for i,j in zip(cnc[:-1], cnc[1:])]
+    dmin = min(min(d) for d in data)
+    dmax = max(max(d) for d in data)
+    norm = plt.Normalize(vmin=dmin, vmax=dmax)
+    for i,nc in enumerate(grid.ncells):
+        ntheta = np.lcm(definition, nc)
+        T, R = np.meshgrid(
+            2*np.pi * np.arange(ntheta+1)/(ntheta) + grid.theta_offset[i], 
+            grid.radii[i:i+2]
+        )
+        ax.pcolormesh(
+            R*np.cos(T), R*np.sin(T), 
+            np.repeat(data[i], ntheta//nc)[None,:], 
+            vmin=dmin, vmax=dmax, **kwarg
+        )
             
