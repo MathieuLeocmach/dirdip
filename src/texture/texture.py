@@ -199,7 +199,7 @@ def statistical_topological_rearrangement_rate(M, T):
     #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
     m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
     inv_m = np.linalg.inv(m)
-    p = - (np.matmul(inv_m, t) - np.matmul(t, inv_m)) / 4
+    p = - (np.matmul(inv_m, t) + np.matmul(t, inv_m)) / 4
     #This should be symetric within numerical errors, so we keep only the upper triangle
     i,j = np.triu_indices(p.shape[-1])
     return p[...,i,j]
@@ -216,7 +216,7 @@ def statistical_relative_deformations(M,C,T):
     B = np.matmul(np.transpose(C, (0,1,3,2)), inv_m)
     v = (A + B) / 2
     omega = (A - B) / 2
-    p = - (np.matmul(inv_m, t) - np.matmul(t, inv_m)) / 4
+    p = - (np.matmul(inv_m, t) + np.matmul(t, inv_m)) / 4
     #V and T should be symetric within numerical errors, so we keep only the upper triangle
     i,j = np.triu_indices(v.shape[-1])
     V = v[...,i,j]
