@@ -43,7 +43,7 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
     
     Returns
     ----------
-    sumC: the sum of the C matrices on each grid element. From C, one obtains `B = C + np.transpose(C, axes=(0,2,1))`. Provided the texture M, we can also obtain V and $\Omega$.
+    sumC: the sum of the C matrices on each grid element. From C, one obtains `B = C + np.swapaxes(C, -1, -2)`. Provided the texture M, we can also obtain V and $\Omega$.
     count: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. The middle of a bond also counts for 1 if it emains on the same grid element between t0 and t1. Caution: intensive matrix C is obtained by dividing sumC of the present function by the count of bin_texture (averaged between t0 and t1).
     """
     assert pos0.shape[1] == grid.ndim
@@ -73,9 +73,7 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
 
 def C2B(C):
     """convert from a C (or sumC) matrix to a B (resp sumB) matrix (upper triangle)"""
-    axes = np.arange(C.ndim)
-    axes[-2:] = axes[-2:][::-1]
-    B = (C + np.transpose(C, axes=axes))
+    B = (C + np.swapaxes(C, -1, -2))
     i,j = np.triu_indices(C.shape[-1])
     return B[...,i,j]
 
@@ -172,7 +170,7 @@ def statistical_velocity_gradient(M, C):
     #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
     m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
     inv_m = np.linalg.inv(m)
-    v = (np.matmul(inv_m, C) + np.matmul(np.transpose(C, (0,1,3,2)), inv_m)) / 2
+    v = (np.matmul(inv_m, C) + np.matmul(np.swapaxes(C, -1, -2), inv_m)) / 2
     #This should be symetric within numerical errors, so we keep only the upper triangle
     i,j = np.triu_indices(v.shape[-1])
     return v[...,i,j]
@@ -184,7 +182,7 @@ def statistical_rotation_rate(M, C):
     #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
     m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
     inv_m = np.linalg.inv(m)
-    omega = (np.matmul(inv_m, C) - np.matmul(np.transpose(C, (0,1,3,2)), inv_m)) / 2
+    omega = (np.matmul(inv_m, C) - np.matmul(np.swapaxes(C, -1, -2), inv_m)) / 2
     #This should be antisymetric within numerical errors, so we keep only the upper triangle, diagonal excluded
     i,j = np.triu_indices(omega.shape[-1], 1)
     if len(i) == 1:
@@ -213,7 +211,7 @@ def statistical_relative_deformations(M,C,T):
     m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
     inv_m = np.linalg.inv(m)
     A = np.matmul(inv_m, C)
-    B = np.matmul(np.transpose(C, (0,1,3,2)), inv_m)
+    B = np.matmul(np.swapaxes(C, -1,-2), inv_m)
     v = (A + B) / 2
     omega = (A - B) / 2
     p = - (np.matmul(inv_m, t) + np.matmul(t, inv_m)) / 4
