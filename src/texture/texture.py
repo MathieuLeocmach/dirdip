@@ -1,4 +1,5 @@
 import numpy as np
+from numba import guvectorize
 
 def bin_texture(pos, pairs, grid):
     """bin texture tensor on a grid
@@ -204,21 +205,16 @@ def statistical_topological_rearrangement_rate(M, T):
 
 def statistical_relative_deformations(M,C,T):
     """Computes the statistical velocity gradient V,  the statistical rotation rate Omega and the statistical topological rearrangement rate P from the texture matrix M, matrix C and topological change matrix T. Keeps only independant coefficients."""
-    m = tri2square(M)
-    t = tri2square(T)
-    #set texture to unity matrix where its determinant is zero (impossible to inverse)
-    #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
-    m[np.linalg.det(m)**2+1==1] = np.eye(m.shape[-1])
-    inv_m = np.linalg.inv(m)
-    W = np.matmul(inv_m, C)
+    W = leastsq(tri2square(M), C)
     v = (W + np.swapaxes(W, -1, -2)) / 2
     omega = (W - np.swapaxes(W, -1, -2)) / 2
-    p = - (np.matmul(inv_m, t) + np.matmul(t, inv_m)) / 4
-    #V and T should be symetric within numerical errors, so we keep only the upper triangle
+    p = leastsq(tri2square(M), tri2square(T))
+    p = (-p + np.swapaxes(p, -1,-2))/4
+    #V and T should be symmetric within numerical errors, so we keep only the upper triangle
     i,j = np.triu_indices(v.shape[-1])
     V = v[...,i,j]
     P = p[...,i,j]
-    #Omega should be antisymetric within numerical errors, so we keep only the upper triangle, diagonal excluded
+    #Omega should be antisymmetric within numerical errors, so we keep only the upper triangle, diagonal excluded
     i,j = np.triu_indices(omega.shape[-1], 1)
     if len(i) == 1:
         Omega = omega[...,i[0],j[0]]
@@ -226,3 +222,7 @@ def statistical_relative_deformations(M,C,T):
         Omega = omega[...,i,j]
     return V, Omega, P
     
+@guvectorize(['(float32[:,:], float32[:,:], float32[:,:])', '(float64[:,:], float64[:,:], float64[:,:])'], '(n,n),(n,n)->(n,n)', nopython=True, target='parallel')
+def leastsq(A,B, res):
+    """Compute element by element the least square solution to Ax=B"""
+    res[:] = np.linalg.lstsq(A,B, rcond=1e-3)[0]
