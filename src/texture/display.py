@@ -45,7 +45,10 @@ def display_matrices(ax, grid, texture, scale = None):
     #sum of the eigenvalues (trace of the matrix)
     trace = ww+hh#np.where(np.abs(ww)>np.abs(hh), ww, hh)#ww*hh
     #color
-    col = plt.cm.viridis((trace - trace.min())/trace.ptp())
+    if trace.ptp()>0:
+        col = plt.cm.viridis((trace - trace.min())/trace.ptp())
+    else:
+        col = 'y'
     
     if scale is None: 
         #scale = 1
