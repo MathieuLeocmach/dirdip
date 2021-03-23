@@ -208,12 +208,11 @@ def statistical_relative_deformations(M,C,T):
     t = tri2square(T)
     #set texture to unity matrix where its determinant is zero (impossible to inverse)
     #since M was symetric, it corresponds to null matrix, thus probably grid elements with no bond inside.
-    m[np.linalg.det(m)==0] = np.eye(m.shape[-1])
+    m[np.linalg.det(m)**2+1==1] = np.eye(m.shape[-1])
     inv_m = np.linalg.inv(m)
-    A = np.matmul(inv_m, C)
-    B = np.matmul(np.swapaxes(C, -1,-2), inv_m)
-    v = (A + B) / 2
-    omega = (A - B) / 2
+    W = np.matmul(inv_m, C)
+    v = (W + np.swapaxes(W, -1, -2)) / 2
+    omega = (W - np.swapaxes(W, -1, -2)) / 2
     p = - (np.matmul(inv_m, t) + np.matmul(t, inv_m)) / 4
     #V and T should be symetric within numerical errors, so we keep only the upper triangle
     i,j = np.triu_indices(v.shape[-1])
