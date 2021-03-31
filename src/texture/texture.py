@@ -1,7 +1,7 @@
 import numpy as np
 from numba import guvectorize
 
-def bin_texture(pos, pairs, grid):
+def bin_texture(pos, pairs, grid, points_per_bond=3):
     """bin texture tensor on a grid
     
     Parameters
@@ -9,13 +9,15 @@ def bin_texture(pos, pairs, grid):
     pos: (P,D) array of coordinates
     pairs: (B,2) array of indices defining bounded pairs of particles
     grid: a D-dimentional Grid instance that performs the binning
+    points_per_bond: int>1 The number of points per bond: 2 only the ends, 3 ends and middle, etc.
     
     Returns
     ----------
     sumw: the sum of the texture matrices on each grid element.
-    count: the number of matrices binned in each grid element. Each end of a bond counts for 1. The middle of a bond also counts for 1.
+    count: the number of matrices binned in each grid element. Each points_per_bond counts for 1.
     """
     assert pos.shape[1] == grid.ndim
+    assert points_per_bond>1
     a = pos[pairs[:,0]]
     b = pos[pairs[:,1]]
     bonds = b - a
@@ -27,13 +29,13 @@ def bin_texture(pos, pairs, grid):
     #bin on each end of each bond and on the middle point
     sumw = np.zeros(grid.shape+(m.shape[1],))
     count = np.zeros(grid.shape, np.int64)
-    for p in [a, b, 0.5*(a + b)]:
-        s, c = grid.count_sum_discreet(p, m)
+    for x in np.linspace(0,1,points_per_bond):
+        s, c = grid.count_sum_discreet((1-x)*a + x*b, m)
         sumw += s
         count += c
     return sumw, count
 
-def bin_geometrical_changes(pos0, pos1, pairs, grid):
+def bin_geometrical_changes(pos0, pos1, pairs, grid, points_per_bond=3):
     """bin on a grid geometrical changes of the texture tensor between two times. It is based on links which exist at both times.
     
     Parameters
@@ -41,15 +43,17 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
     pos0, pos1: (P,D) arrays of coordinates
     pairs: (B,2) array of indices defining bounded pairs of particles at both times
     grid: a D-dimentional Grid instance that performs the binning
+    points_per_bond: int>1 The number of points per bond: 2 only the ends, 3 ends and middle, etc.
     
     Returns
     ----------
     sumC: the sum of the C matrices on each grid element. From C, one obtains `B = C + np.swapaxes(C, -1, -2)`. Provided the texture M, we can also obtain V and $\Omega$.
-    count: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. The middle of a bond also counts for 1 if it emains on the same grid element between t0 and t1. Caution: intensive matrix C is obtained by dividing sumC of the present function by the count of bin_texture (averaged between t0 and t1).
+    count: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. Each intermediate point also counts for 1 if it remains on the same grid element between t0 and t1. Caution: intensive matrix C is obtained by dividing sumC of the present function by the count of bin_texture (averaged between t0 and t1).
     """
     assert pos0.shape[1] == grid.ndim
     assert pos0.shape[0] == pos1.shape[0]
     assert pos0.shape[1] == pos1.shape[1]
+    assert points_per_bond>1
     a = pos0[pairs[:,0]]
     b = pos0[pairs[:,1]]
     bonds0 = b - a
@@ -66,8 +70,8 @@ def bin_geometrical_changes(pos0, pos1, pairs, grid):
     #only points that stay in the same bin will be counted
     sumw = np.zeros(grid.shape + C.shape[1:])
     count = np.zeros(grid.shape, np.int64)
-    for p,q in [(a,c), (b,d), (0.5*(a + b), 0.5*(c + d))]:
-        su, co = grid.count_sum_discreet(p, C, q)
+    for x in np.linspace(0,1,points_per_bond):
+        su, co = grid.count_sum_discreet((1-x)*a + x*b, C, (1-x)*c + x*d)
         sumw += su
         count += co
     return sumw, count
@@ -104,7 +108,7 @@ def bonds_appeared_disapeared(pairs0, pairs1):
     pairsc = bonds_set_to_array(s0&s1)
     return pairsa, pairsd, pairsc
     
-def bin_topological_changes(pos0, pos1, pairs0, pairs1, grid):
+def bin_topological_changes(pos0, pos1, pairs0, pairs1, grid, points_per_bond=3):
     """bin on a grid topological changes of the texture tensor between two times. It is based on links which appeared or disappeared between both times.
     
     Parameters
@@ -113,12 +117,13 @@ def bin_topological_changes(pos0, pos1, pairs0, pairs1, grid):
     pairs0: (B0,2) array of indices defining bounded pairs of particles at t0
     pairs1: (B1,2) array of indices defining bounded pairs of particles at t1
     grid: a D-dimentional Grid instance that performs the binning
+    points_per_bond: int>1 The number of points per bond: 2 only the ends, 3 ends and middle, etc.
     
     Returns
     ----------
     sumw: the sum of the T matrices on each grid element. Caution: intensive matrix T is obtained by dividing sumw of the present function by the count of bin_texture (averaged between t0 and t1).
-    counta: the number of appearing matrices binned in each grid element. Each end of an appearing bond at t1 counts for 1. The middle of a bond also counts for 1.
-    countd: the number of disappearing matrices binned in each grid element. Each end of a disappearing bond at t0 counts for 1. The middle of a bond also counts for 1.
+    counta: the number of appearing matrices binned in each grid element. Each end of an appearing bond, as well as intermediate points, at t1 counts for 1.
+    countd: the number of disappearing matrices binned in each grid element. Each end of a disappearing bond, as well as intermediate points, at t0 counts for 1.
     """
     assert pos0.shape[1] == grid.ndim
     assert pos0.shape[0] == pos1.shape[0]
@@ -126,12 +131,12 @@ def bin_topological_changes(pos0, pos1, pairs0, pairs1, grid):
     #bonds that appeared and disappeared between t0 and t1
     pairsa, pairsd, pairsc = bonds_appeared_disapeared(pairs0, pairs1)
     #bin the texture of bonds that appeared
-    sumwa, counta = bin_texture(pos1, pairsa, grid)
+    sumwa, counta = bin_texture(pos1, pairsa, grid, points_per_bond)
     #bin the texture of bonds that disappeared
-    sumwd, countd = bin_texture(pos0, pairsd, grid)
+    sumwd, countd = bin_texture(pos0, pairsd, grid, points_per_bond)
     return sumwa-sumwd, counta, countd
     
-def bin_changes(pos0, pos1, pairs0, pairs1, grid):
+def bin_changes(pos0, pos1, pairs0, pairs1, grid, points_per_bond=3):
     """bin on a grid geometrical and topological changes of the texture tensor between two times.
     Caution: intensive matrices C and T are obtained by dividing sumC and sumT of the present function by the count of bin_texture (averaged between t0 and t1).
     
@@ -141,14 +146,15 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     pairs0: (B0,2) array of indices defining bounded pairs of particles at t0
     pairs1: (B1,2) array of indices defining bounded pairs of particles at t1
     grid: a D-dimentional Grid instance that performs the binning
+    points_per_bond: int>1 The number of points per bond: 2 only the ends, 3 ends and middle, etc.
     
     Returns
     ----------
     sumC: the sum of the C matrices on each grid element.
     countc: the number of matrices binned in each grid element. Each end of a bond that remains on the same grid element between t0 and t1 counts for 1. The middle of a bond also counts for 1 if it emains on the same grid element between t0 and t1.
     sumT: the sum of the T matrices on each grid element.
-    counta: the number of appearing matrices binned in each grid element. Each end of an appearing bond at t1 counts for 1. The middle of a bond also counts for 1.
-    countd: the number of disappearing matrices binned in each grid element. Each end of a disappearing bond at t0 counts for 1. The middle of a bond also counts for 1.
+    counta: the number of appearing matrices binned in each grid element. Each end of an appearing bond, as well as intermediate points, at t1 counts for 1.
+    countd: the number of disappearing matrices binned in each grid element. Each end of a disappearing bond, as well as intermediate points, at t0 counts for 1.
     """
     assert pos0.shape[1] == grid.ndim
     assert pos0.shape[0] == pos1.shape[0]
@@ -156,11 +162,11 @@ def bin_changes(pos0, pos1, pairs0, pairs1, grid):
     #bonds that appeared, disappeared, or were conserved between t0 and t1
     pairsa, pairsd, pairsc = bonds_appeared_disapeared(pairs0, pairs1)
     #bin the texture of bonds that appeared
-    sumwa, counta = bin_texture(pos1, pairsa, grid)
+    sumwa, counta = bin_texture(pos1, pairsa, grid, points_per_bond)
     #bin the texture of bonds that disappeared
-    sumwd, countd = bin_texture(pos0, pairsd, grid)
+    sumwd, countd = bin_texture(pos0, pairsd, grid, points_per_bond)
     #bin the geometrical changes of the conserved bonds
-    sumC, countc = bin_geometrical_changes(pos0, pos1, pairsc, grid)
+    sumC, countc = bin_geometrical_changes(pos0, pos1, pairsc, grid, points_per_bond)
     return sumC, countc, sumwa-sumwd, counta, countd
 
    
