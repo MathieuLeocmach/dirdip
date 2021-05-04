@@ -29,7 +29,7 @@ def display_scalar(ax, grid, scalar, kw_scatter = {'marker': 'o'}):
         sc = scalar
     return ax.scatter(XY[:,0], XY[:,1], c = sc, **kw_scatter)
     
-def display_matrices(ax, grid, texture, scale = None):
+def display_matrices(ax, grid, texture, scale = None, col=None):
     """Display on a matplotlib axis an ellipse representing a symmetric matrix at each grid element. Each axis of the ellipse corresponds to an eigenvalue and is oriented along its eigenvector. An axis corresponding to a positive eigenvalue is drawn. A 'coffee bean' has a negative eigenvalue smaller in absolute value than its positive eigenvalue. A 'capsule' has a negative eigenvalue larger in absolute value than its positive eigenvalue. A circle is when the two eigenvalues are equal in absolute value."""
     XY = grid.mesh()
     mask = grid.mask()
@@ -45,10 +45,11 @@ def display_matrices(ax, grid, texture, scale = None):
     #sum of the eigenvalues (trace of the matrix)
     trace = ww+hh#np.where(np.abs(ww)>np.abs(hh), ww, hh)#ww*hh
     #color
-    if trace.ptp()>0:
-        col = plt.cm.viridis((trace - trace.min())/trace.ptp())
-    else:
-        col = 'y'
+    #if col is None:
+    #    if trace.ptp()>0:
+    #        col = plt.cm.viridis((trace.ravel() - trace.min())/trace.ptp())
+    #    else:
+    #        col = plt.cm.viridis(np.ones_like(trace))
     
     if scale is None: 
         #scale = 1
@@ -64,12 +65,10 @@ def display_matrices(ax, grid, texture, scale = None):
     
     #show ellipses
     ec = EllipseCollection(
-        ww*scale, hh*scale, aa, units='x', offsets=XY,
+        ww*scale, hh*scale, aa, units='xy', offsets=XY,
         transOffset=ax.transData, 
         edgecolors=col, facecolors='none',
     )
-    ec.set_array(trace)
-    ax.add_collection(ec)
     #major and minor axes (only for positive eigenvalues)
     xyps = scale * np.transpose(evectors*np.maximum(0, evalues)[...,None,:], (0,1,3,2))[mask].reshape(2*len(ww),2)*0.5
     ma = LineCollection(
@@ -77,6 +76,14 @@ def display_matrices(ax, grid, texture, scale = None):
         offsets=np.repeat(XY, 2, axis=0),
         color=(0.5,0.5,0.5)
     )
+    if col is None:
+        if trace.ptp()>0:
+            ec.set_array(trace)
+            ma.set_array(trace[mask.ravel()])
+    else:
+        ec.set_edgecolors(col)
+        ma.set_edgecolors(col)
+    ax.add_collection(ec)
     ax.add_collection(ma)
     return ec
 
