@@ -434,10 +434,12 @@ def load(fname):
             edges = [map(float, line[:-1].split()) for line in f]
             return Grid(edges)
         elif typ == "Regular":
-            offsets = np.array(list(map(float, f.readline()[-1].split())))
-            steps = np.array(list(map(float, f.readline()[-1].split())))
-            nsteps = np.array(list(map(int, f.readline()[-1].split())))
+            offsets = np.array(list(map(float, f.readline()[:-1].split())))
+            steps = np.array(list(map(float, f.readline()[:-1].split())))
+            nsteps = np.array(list(map(int, f.readline()[:-1].split())))
             return RegularGrid(offsets, steps, nsteps)
-                
-        
-            
+        elif typ == "Polar":
+            radii = np.array(list(map(float, f.readline()[:-1].split())))
+            ncells = np.array(list(map(int, f.readline()[:-1].split())))
+            theta_offset = np.array(list(map(float, f.readline()[:-1].split())))
+            return PolarGrid(radii, ncells, theta_offset)
